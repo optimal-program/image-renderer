@@ -1,0 +1,29 @@
+{
+  "name": "optimal/image-renderer",
+  "description": "Simple package to render advanced img tag.",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [
+    "img",
+    "image",
+    "renderer"
+  ],
+  "require": {
+    "php": ">=7.2"
+  },
+  "authors": [
+    {
+      "name": "Radim Vidlák",
+      "email": "radim.vidlak@gmail.com"
+    },
+    {
+      "name": "Jan Jindra",
+      "email": "jindra@optimal-program.cz"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Optimal\\ImageRenderer\\": "src/"
+    }
+  }
+}
