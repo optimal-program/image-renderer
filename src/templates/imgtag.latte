@@ -1,11 +1,11 @@
 {if $lazyLoad}
-    <img data-src="/{$src}?time={filemtime($src)}" data-srcset="{$srcset|noescape}" sizes="{$sizes|noescape}" alt="{$alt}" class="{$class|noescape}"
+    <img data-src="{$basePath}/{$src}?time={filemtime($src)}" data-srcset="{$srcset|noescape}" sizes="{$sizes|noescape}" alt="{$alt}" class="{$class|noescape}"
          {foreach $attributes as $attrName => $attr}
              {$attrName}="{$attr|noescape}"
          {/foreach}
     />
 {else}
-    <img src="/{$src}?time={filemtime($src)}" srcset="{$srcset|noescape}" sizes="{$sizes|noescape}" alt="{$alt}" class="{$class|noescape}"
+    <img src="{$basePath}/{$src}?time={filemtime($src)}" srcset="{$srcset|noescape}" sizes="{$sizes|noescape}" alt="{$alt}" class="{$class|noescape}"
     {foreach $attributes as $attrName => $attr}
         {$attrName}="{$attr|noescape}"
     {/foreach}

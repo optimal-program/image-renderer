@@ -42,7 +42,7 @@ class ImageRenderer extends UI\Control
 
     /**
      * @param string $directory
-     * @throws Exception\DirectoryNotFoundException
+     * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
      */
     public function setImagesVariantsCacheDirectory(string $directory){
         $this->imageCacheDirCommander = new FileCommander();
@@ -79,8 +79,7 @@ class ImageRenderer extends UI\Control
      */
     protected function createImageSize(ImageFileResource $image, string $destinationPath, string $newName, string $extension, int $width = 0, int $height = 0){
 
-        if (!$this->imageDirectoryCommander->fileExists($newName, $extension))
-        {
+        if (!$this->imageCacheDirCommander->fileExists($newName, $extension)) {
             $this->imagesManager->setOutputDirectory($destinationPath);
 
             $imageManageResource = $this->imagesManager->loadImageManageResource($image->getName(), $image->getExtension());
@@ -93,7 +92,7 @@ class ImageRenderer extends UI\Control
 
             return $thumbResource;
         } else {
-            $thumbResource = $this->imageDirectoryCommander->getImage($newName, $extension);
+            $thumbResource = $this->imageCacheDirCommander->getImage($newName, $extension);
             return $thumbResource;
         }
 
@@ -101,9 +100,8 @@ class ImageRenderer extends UI\Control
 
     /**
      * @param string $imagePath
-     * @param array $sizes
-     * @param array $thumbsSizes
      * @return array
+     * @throws DirectoryException
      * @throws FileNotFoundException
      * @throws \ImagickException
      * @throws \Optimal\FileManaging\Exception\CreateDirectoryException
@@ -111,7 +109,12 @@ class ImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Optimal\FileManaging\Exception\GDException
      */
-    protected function checkImage(string $imagePath){
+    protected function checkImage(string $imagePath)
+    {
+
+        if(!$this->imageCacheDirCommander){
+            throw new \Exception('Images variants cache directory is not set');
+        }
 
         $image = new ImageFileResource($imagePath);
         $this->imageDirectoryCommander->setPath($image->getFileDirectoryPath());
@@ -122,17 +125,20 @@ class ImageRenderer extends UI\Control
         $imageName = $image->getName();
         $this->imagesManager->setSourceDirectory($image->getFileDirectoryPath());
 
-        if($this->imageCacheDirCommander) {
-            $cacheDirPath = $this->imageCacheDirCommander->getRelativePath();
+        $cacheDirPath = $this->imageCacheDirCommander->getRelativePath();
+
+        if($this->imageCacheDirCommander->directoryExists($this->imageCacheDirCommander->getRelativePath()."/".$this->imageDirectoryCommander->getRelativePath())){
+            $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getRelativePath()."/".$this->imageDirectoryCommander->getRelativePath());
+        } else {
             $pathParts = explode("/", $this->imageDirectoryCommander->getRelativePath());
             foreach ($pathParts as $pathPart) {
                 $this->imageCacheDirCommander->addDirectory($pathPart, true);
             }
         }
 
-        if($this->resolutionSizes != null){
+        if ($this->resolutionSizes != null) {
 
-            if(!$this->imageCacheDirCommander){
+            if (!$this->imageCacheDirCommander) {
                 throw new DirectoryException("Images variants cache directory is not defined");
             }
 
@@ -145,20 +151,22 @@ class ImageRenderer extends UI\Control
                 $width = $resolutionSize->getWidth();
                 $height = $resolutionSize->getHeight();
 
-                if(($width > $image->getWidth()) || ($height > $image->getHeight())) continue;
+                if (($width > $image->getWidth()) || ($height > $image->getHeight())) continue;
 
                 $newName = $imageName . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
                 $extension = $resolutionSize->getExtension() == "default" ? $image->getExtension() : $resolutionSize->getExtension();
-                array_push($imageVariants, $this->createImageSize($image,$this->imageCacheDirCommander->getRelativePath(),$newName,$extension,$width,$height));
+                array_push($imageVariants, $this->createImageSize($image, $this->imageCacheDirCommander->getRelativePath(), $newName, $extension, $width, $height));
 
-                $this->imageCacheDirCommander->moveUp();
             }
+
+            $this->imageCacheDirCommander->moveUp();
+            $this->imageCacheDirCommander->moveUp();
 
         }
 
-        if($this->thumbResolutionSizes != null) {
+        if ($this->thumbResolutionSizes != null) {
 
-            if(!$this->imageCacheDirCommander){
+            if (!$this->imageCacheDirCommander) {
                 throw new DirectoryException("Images variants cache directory is not defined");
             }
 
@@ -171,21 +179,21 @@ class ImageRenderer extends UI\Control
                 $width = $resolutionSize->getWidth();
                 $height = $resolutionSize->getHeight();
 
-                if(($width > $image->getWidth()) || ($height > $image->getHeight())) continue;
+                if (($width > $image->getWidth()) || ($height > $image->getHeight())) continue;
 
-                $newName = $imageName.'-thumb-'.(($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
+                $newName = $imageName . '-thumb-' . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
                 $extension = $resolutionSize->getExtension() == "default" ? $image->getExtension() : $resolutionSize->getExtension();
                 array_push($imageThumbsVariants, $this->createImageSize($image, $this->imageCacheDirCommander->getRelativePath(), $newName, $extension, $width, $height));
 
-                $this->imageCacheDirCommander->moveUp();
             }
+
+            $this->imageCacheDirCommander->moveUp();
+            $this->imageCacheDirCommander->moveUp();
         }
 
-        if($this->imageCacheDirCommander) {
-            $this->imageCacheDirCommander->setPath($cacheDirPath);
-        }
+        $this->imageCacheDirCommander->setPath($cacheDirPath);
 
-        if($this->resolutionSizes == null && $this->thumbResolutionSizes == null){
+        if ($this->resolutionSizes == null && $this->thumbResolutionSizes == null) {
             throw new \Exception('No image resolutions defined');
         }
 
