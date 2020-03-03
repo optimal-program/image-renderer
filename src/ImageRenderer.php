@@ -219,7 +219,7 @@ class ImageRenderer extends UI\Control
     protected function renderImgTag(array $imageData, string $alt, string $devicesSizes, bool $lazyLoad = false, array $attributes = [])
     {
         $template = $this->templateFactory->createTemplate();
-        $template->src = $imageData[0]->getUrlToFile();
+        $template->src = $imageData[0]->getFileRelativePath();
         $template->alt = $alt;
         $template->srcset = $this->prepareSrcSet($imageData);
 

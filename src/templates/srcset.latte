@@ -1,4 +1,4 @@
 {foreach $variants as $variant}
         {if $iterator->counter > 1},{/if}
-        {$variant->getUrlToFile()} {$variant->getWidth()}w
+        /{$variant->getFileRelativePath()}?time={filemtime($variant->getFileRelativePath())} {$variant->getWidth()}w
 {/foreach}
