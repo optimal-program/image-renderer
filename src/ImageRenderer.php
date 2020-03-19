@@ -142,8 +142,8 @@ class ImageRenderer extends UI\Control
                 throw new DirectoryException("Images variants cache directory is not defined");
             }
 
-            $this->imageCacheDirCommander->addDirectory('image_variants', true);
             $this->imageCacheDirCommander->addDirectory($image->getName(), true);
+            $this->imageCacheDirCommander->addDirectory('image_variants', true);
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->resolutionSizes->getResolutionsSettings() as $resolutionSize) {
@@ -160,7 +160,6 @@ class ImageRenderer extends UI\Control
             }
 
             $this->imageCacheDirCommander->moveUp();
-            $this->imageCacheDirCommander->moveUp();
 
         }
 
@@ -170,8 +169,9 @@ class ImageRenderer extends UI\Control
                 throw new DirectoryException("Images variants cache directory is not defined");
             }
 
-            $this->imageDirectoryCommander->addDirectory('thumb_variants', true);
+            $this->imageDirectoryCommander->addDirectory('thumbs', true);
             $this->imageDirectoryCommander->addDirectory($image->getName(), true);
+            $this->imageDirectoryCommander->addDirectory('thumb_variants', true);
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->thumbResolutionSizes->getResolutionsSettings() as $resolutionSize) {
@@ -186,9 +186,7 @@ class ImageRenderer extends UI\Control
                 array_push($imageThumbsVariants, $this->createImageSize($image, $this->imageCacheDirCommander->getRelativePath(), $newName, $extension, $width, $height));
 
             }
-
-            $this->imageCacheDirCommander->moveUp();
-            $this->imageCacheDirCommander->moveUp();
+            
         }
 
         $this->imageCacheDirCommander->setPath($cacheDirPath);
