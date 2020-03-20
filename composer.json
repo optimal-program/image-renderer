@@ -9,8 +9,7 @@
     "renderer"
   ],
   "require": {
-    "php": ">=7.2",
-    "optimal/file-managing": "0.*"
+    "php": ">=7.2"
   },
   "authors": [
     {
