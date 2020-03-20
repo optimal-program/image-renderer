@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Components\ImageRenderer;
+namespace Optimal\ImageRenderer;
 
 interface ImageRendererFactory
 {
