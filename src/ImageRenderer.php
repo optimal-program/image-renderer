@@ -186,7 +186,7 @@ class ImageRenderer extends UI\Control
                 array_push($imageThumbsVariants, $this->createImageSize($image, $this->imageCacheDirCommander->getRelativePath(), $newName, $extension, $width, $height));
 
             }
-            
+
         }
 
         $this->imageCacheDirCommander->setPath($cacheDirPath);
