@@ -165,7 +165,7 @@ class ImageRenderer extends UI\Control
             $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getRelativePath()."/".$this->imageDirectoryCommander->getRelativePath());
         } else {
             $imagePath = $this->imageDirectoryCommander->getAbsolutePath();
-            $cachePath = $this->imageDirectoryCommander->getRelativePath();
+            $cachePath = $this->imageCacheDirCommander->getAbsolutePath();
 
             $commonPart = $this->lcs2($imagePath, $cachePath);
             $imageDirWithoutCommonPart = str_replace($commonPart,"",$imagePath);
