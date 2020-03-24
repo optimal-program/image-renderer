@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Components\ImageRenderer;
+namespace Optimal\ImageRenderer;
 
 use Nette\Application\UI;
 use Optimal\FileManaging\Exception\DirectoryException;
