@@ -63,6 +63,36 @@ class ImageRenderer extends UI\Control
         $this->thumbResolutionSizes = $sizes;
     }
 
+    protected function lcs2($first, $second)
+    {
+        $len1 = strlen($first);
+        $len2 = strlen($second);
+
+        if ($len1 < $len2) {
+            $shortest = $first;
+            $longest = $second;
+            $len_shortest = $len1;
+        } else {
+            $shortest = $second;
+            $longest = $first;
+            $len_shortest = $len2;
+        }
+
+        //check max len
+        $pos = strpos($longest, $shortest);
+        if($pos !== false) return $shortest;
+
+        for ($i = 1, $j = $len_shortest - 1; $j > 0; --$j, ++$i) {
+            for($k = 0; $k <= $i; ++$k){
+                $substr = substr($shortest, $k, $j);
+                $pos = strpos($longest, $substr);
+                if($pos !== false) return $substr;
+            }
+        }
+
+        return "";
+    }
+
     /**
      * @param ImageFileResource $image
      * @param string $destinationPath
@@ -134,7 +164,13 @@ class ImageRenderer extends UI\Control
         if($this->imageCacheDirCommander->directoryExists($this->imageCacheDirCommander->getRelativePath()."/".$this->imageDirectoryCommander->getRelativePath())){
             $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getRelativePath()."/".$this->imageDirectoryCommander->getRelativePath());
         } else {
-            $pathParts = explode("/", $this->imageDirectoryCommander->getRelativePath());
+            $imagePath = $this->imageDirectoryCommander->getAbsolutePath();
+            $cachePath = $this->imageDirectoryCommander->getRelativePath();
+
+            $commonPart = $this->lcs2($imagePath, $cachePath);
+            $imageDirWithoutCommonPart = str_replace($commonPart,"",$imagePath);
+
+            $pathParts = explode("/", $imageDirWithoutCommonPart);
             foreach ($pathParts as $pathPart) {
                 $this->imageCacheDirCommander->addDirectory($pathPart, true);
             }
