@@ -109,11 +109,15 @@ class ImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Optimal\FileManaging\Exception\GDException
      */
-    protected function checkImage(string $imagePath)
+    public function createImageResolutionsVariants(string $imagePath)
     {
 
         if(!$this->imageCacheDirCommander){
             throw new \Exception('Images variants cache directory is not set');
+        }
+
+        if ($this->resolutionSizes == null && $this->thumbResolutionSizes == null) {
+            throw new \Exception('No image resolutions defined');
         }
 
         $image = new ImageFileResource($imagePath);
@@ -191,10 +195,6 @@ class ImageRenderer extends UI\Control
 
         $this->imageCacheDirCommander->setPath($cacheDirPath);
 
-        if ($this->resolutionSizes == null && $this->thumbResolutionSizes == null) {
-            throw new \Exception('No image resolutions defined');
-        }
-
         return ['variants' => $imageVariants, 'thumb_variants' => $imageThumbsVariants];
     }
 
@@ -251,7 +251,7 @@ class ImageRenderer extends UI\Control
 
     public function renderImageThumb(string $imagePath, string $alt, string $devicesSizes, bool $lazyLoad = false, array $attributes = [])
     {
-        $imageData = $this->checkImage($imagePath);
+        $imageData = $this->createImageResolutionsVariants($imagePath);
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $this->renderImgTag($imageData["thumb_variants"], $alt, $devicesSizes, $lazyLoad, $attributes);
         if($this->presenter->isAjax()){
@@ -264,7 +264,7 @@ class ImageRenderer extends UI\Control
 
     public function renderImage(string $imagePath, string $alt, string $devicesSizes, bool $lazyLoad = false, array $attributes = [])
     {
-        $imageData = $this->checkImage($imagePath);
+        $imageData = $this->createImageResolutionsVariants($imagePath);
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $this->renderImgTag($imageData["variants"], $alt, $devicesSizes, $lazyLoad, $attributes);
         if($this->presenter->isAjax()){
@@ -277,7 +277,7 @@ class ImageRenderer extends UI\Control
 
     public function renderImageThumbWithCaption(string $imagePath, string $alt, string $devicesSizes, string $caption, bool $lazyLoad = false, array $attributes = [])
     {
-        $imageData = $this->checkImage($imagePath);
+        $imageData = $this->createImageResolutionsVariants($imagePath);
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $this->renderImgTag($imageData["thumb_variants"], $alt, $devicesSizes, $lazyLoad, $attributes);
         $this->template->caption = $caption;
@@ -291,7 +291,7 @@ class ImageRenderer extends UI\Control
 
     public function renderImageWithCaption(string $imagePath, string $alt, string $devicesSizes, string $caption, bool $lazyLoad = false, array $attributes = [])
     {
-        $imageData = $this->checkImage($imagePath);
+        $imageData = $this->createImageResolutionsVariants($imagePath);
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $this->renderImgTag($imageData["variants"], $alt, $devicesSizes, $lazyLoad, $attributes);
         $this->template->caption = $caption;
