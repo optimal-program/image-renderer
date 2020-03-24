@@ -209,9 +209,9 @@ class ImageRenderer extends UI\Control
                 throw new DirectoryException("Images variants cache directory is not defined");
             }
 
-            $this->imageDirectoryCommander->addDirectory('thumbs', true);
-            $this->imageDirectoryCommander->addDirectory($image->getName(), true);
-            $this->imageDirectoryCommander->addDirectory('thumb_variants', true);
+            $this->imageCacheDirCommander->addDirectory('thumbs', true);
+            $this->imageCacheDirCommander->addDirectory($image->getName(), true);
+            $this->imageCacheDirCommander->addDirectory('thumb_variants', true);
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->thumbResolutionSizes->getResolutionsSettings() as $resolutionSize) {
