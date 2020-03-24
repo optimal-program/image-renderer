@@ -211,7 +211,6 @@ class ImageRenderer extends UI\Control
 
             $this->imageCacheDirCommander->addDirectory('thumbs', true);
             $this->imageCacheDirCommander->addDirectory($image->getName(), true);
-            $this->imageCacheDirCommander->addDirectory('thumb_variants', true);
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->thumbResolutionSizes->getResolutionsSettings() as $resolutionSize) {
