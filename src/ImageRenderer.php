@@ -159,17 +159,15 @@ class ImageRenderer extends UI\Control
         $imageName = $image->getName();
         $this->imagesManager->setSourceDirectory($image->getFileDirectoryPath());
 
-        $cacheDirPath = $this->imageCacheDirCommander->getRelativePath();
+        $cacheDirPath = $this->imageCacheDirCommander->getAbsolutePath();
+        $imagePath = $this->imageDirectoryCommander->getAbsolutePath();
 
-        if($this->imageCacheDirCommander->directoryExists($this->imageCacheDirCommander->getRelativePath()."/".$this->imageDirectoryCommander->getRelativePath())){
-            $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getRelativePath()."/".$this->imageDirectoryCommander->getRelativePath());
+        $commonPart = $this->lcs2($imagePath, $cacheDirPath);
+        $imageDirWithoutCommonPart = str_replace($commonPart,"",$imagePath);
+
+        if($this->imageCacheDirCommander->directoryExists($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart)){
+            $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart);
         } else {
-            $imagePath = $this->imageDirectoryCommander->getAbsolutePath();
-            $cachePath = $this->imageCacheDirCommander->getAbsolutePath();
-
-            $commonPart = $this->lcs2($imagePath, $cachePath);
-            $imageDirWithoutCommonPart = str_replace($commonPart,"",$imagePath);
-
             $pathParts = explode("/", $imageDirWithoutCommonPart);
             foreach ($pathParts as $pathPart) {
                 $this->imageCacheDirCommander->addDirectory($pathPart, true);
@@ -195,7 +193,13 @@ class ImageRenderer extends UI\Control
 
                 $newName = $imageName . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
                 $extension = $resolutionSize->getExtension() == "default" ? $image->getExtension() : $resolutionSize->getExtension();
-                array_push($imageVariants, $this->createImageSize($image, $this->imageCacheDirCommander->getRelativePath(), $newName, $extension, $width, $height));
+
+                /** @var ImageFileResource $imageVariant */
+                $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
+                $imageVariant->setNewPath(str_replace($commonPart,"", $this->imageCacheDirCommander->getAbsolutePath()));
+                $imageVariant->applyNewSettings();
+
+                array_push($imageVariants, $imageVariant);
 
             }
 
@@ -222,8 +226,13 @@ class ImageRenderer extends UI\Control
 
                 $newName = $imageName . '-thumb-' . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
                 $extension = $resolutionSize->getExtension() == "default" ? $image->getExtension() : $resolutionSize->getExtension();
-                array_push($imageThumbsVariants, $this->createImageSize($image, $this->imageCacheDirCommander->getRelativePath(), $newName, $extension, $width, $height));
 
+                /** @var ImageFileResource $imageVariant */
+                $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
+                $imageVariant->setNewPath(str_replace($commonPart,"", $this->imageCacheDirCommander->getAbsolutePath()));
+                $imageVariant->applyNewSettings();
+
+                array_push($imageThumbsVariants, $imageVariant);
             }
 
         }
