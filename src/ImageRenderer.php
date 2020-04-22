@@ -349,6 +349,8 @@ class ImageRenderer extends UI\Control
 
     public function renderInlineSvg(string $svgPath, string $alt)
     {
+        $this->template->setFile(__DIR__ . '/templates/inlineSvg.latte');
+
         $this->template->svgContent = file_get_contents($svgPath);
 
         if($this->presenter->isAjax()){
