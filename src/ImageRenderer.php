@@ -347,7 +347,7 @@ class ImageRenderer extends UI\Control
         }
     }
 
-    public function renderInlineSvg(string $svgPath, string $alt)
+    public function renderInlineSvg(string $svgPath)
     {
         $this->template->setFile(__DIR__ . '/templates/inlineSvg.latte');
 
