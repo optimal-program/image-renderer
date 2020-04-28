@@ -163,7 +163,7 @@ class ImageRenderer extends UI\Control
         $imagePath = $this->imageDirectoryCommander->getAbsolutePath();
 
         $commonPart = $this->lcs2($imagePath, $cacheDirPath);
-        $imageDirWithoutCommonPart = str_replace($commonPart,"",$imagePath);
+        $imageDirWithoutCommonPart = str_replace($commonPart, "", $imagePath);
 
         if($this->imageCacheDirCommander->directoryExists($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart)){
             $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart);
@@ -196,11 +196,8 @@ class ImageRenderer extends UI\Control
 
                 /** @var ImageFileResource $imageVariant */
                 $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
-                $imageVariant->setNewPath(str_replace($commonPart,"", $this->imageCacheDirCommander->getAbsolutePath()));
-                $imageVariant->applyNewSettings();
 
                 array_push($imageVariants, $imageVariant);
-
             }
 
             $this->imageCacheDirCommander->moveUp();
@@ -229,9 +226,7 @@ class ImageRenderer extends UI\Control
 
                 /** @var ImageFileResource $imageVariant */
                 $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
-                $imageVariant->setNewPath(str_replace($commonPart,"", $this->imageCacheDirCommander->getAbsolutePath()));
-                $imageVariant->applyNewSettings();
-
+                
                 array_push($imageThumbsVariants, $imageVariant);
             }
 
