@@ -107,7 +107,8 @@ class ImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Optimal\FileManaging\Exception\GDException
      */
-    protected function createImageSize(ImageFileResource $image, string $destinationPath, string $newName, string $extension, int $width = 0, int $height = 0){
+    protected function createImageSize(ImageFileResource $image, string $destinationPath, string $newName, string $extension, int $width = 0, int $height = 0)
+    {
 
         if (!$this->imageCacheDirCommander->fileExists($newName, $extension)) {
             $this->imagesManager->setOutputDirectory($destinationPath);
@@ -189,7 +190,13 @@ class ImageRenderer extends UI\Control
                 $width = $resolutionSize->getWidth();
                 $height = $resolutionSize->getHeight();
 
-                if (($width > $image->getWidth()) || ($height > $image->getHeight())) continue;
+                if($width && $height){
+                    if (($width > $image->getWidth()) && ($height > $image->getHeight())) continue;
+                } elseif ($height){
+                    if($height > $image->getHeight()) continue;
+                } elseif ($width > $image->getWidth()) {
+                    continue;
+                }
 
                 $newName = $imageName . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
                 $extension = $resolutionSize->getExtension() == "default" ? $image->getExtension() : $resolutionSize->getExtension();
@@ -198,6 +205,12 @@ class ImageRenderer extends UI\Control
                 $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
 
                 array_push($imageVariants, $imageVariant);
+            }
+
+            if(empty($imageVariants)){
+                $newName = $imageName . (($image->getWidth() > 0) ? '-w' . $image->getWidth() : '') . (($image->getHeight() > 0) ? '-h' . $image->getHeight : '');
+                copy($image->getFilePath(), $this->imageCacheDirCommander->getAbsolutePath()."/".$newName.".".$image->getExtension());
+                array_push($imageVariants, $this->imageCacheDirCommander->getImage($newName, $image->getExtension(), false, false));
             }
 
             $this->imageCacheDirCommander->moveUp();
@@ -219,15 +232,27 @@ class ImageRenderer extends UI\Control
                 $width = $resolutionSize->getWidth();
                 $height = $resolutionSize->getHeight();
 
-                if (($width > $image->getWidth()) || ($height > $image->getHeight())) continue;
+                if($width && $height){
+                    if (($width > $image->getWidth()) && ($height > $image->getHeight())) continue;
+                } elseif ($height){
+                    if($height > $image->getHeight()) continue;
+                } elseif ($width > $image->getWidth()) {
+                    continue;
+                }
 
                 $newName = $imageName . '-thumb-' . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
                 $extension = $resolutionSize->getExtension() == "default" ? $image->getExtension() : $resolutionSize->getExtension();
 
                 /** @var ImageFileResource $imageVariant */
                 $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
-                
+
                 array_push($imageThumbsVariants, $imageVariant);
+            }
+
+            if(empty($imageThumbsVariants)){
+                $newName = $imageName .'-thumb-'. (($image->getWidth() > 0) ? '-w' . $image->getWidth() : '') . (($image->getHeight() > 0) ? '-h' . $image->getHeight : '');
+                copy($image->getFilePath(), $this->imageCacheDirCommander->getAbsolutePath()."/".$newName.".".$image->getExtension());
+                array_push($imageThumbsVariants, $this->imageCacheDirCommander->getImage($newName, $image->getExtension(), false, false));
             }
 
         }
