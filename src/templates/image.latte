@@ -1,1 +1,8 @@
-{$imgTag|noescape}
+{if $caption}
+    <figure>
+        {$imgTag|noescape}
+        <figcaption>{$caption}</figcaption>
+    </figure>
+{else}
+    {$imgTag|noescape}
+{/if}

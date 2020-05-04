@@ -94,6 +94,25 @@ class ImageRenderer extends UI\Control
     }
 
     /**
+     * @param string $imagePath
+     * @param string $cacheDirPath
+     */
+    protected function checkCachePath(string $imagePath, string $cacheDirPath)
+    {
+        $commonPart = $this->lcs2($imagePath, $cacheDirPath);
+        $imageDirWithoutCommonPart = str_replace($commonPart, "", $imagePath);
+
+        if($this->imageCacheDirCommander->directoryExists($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart)){
+            $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart);
+        } else {
+            $pathParts = explode("/", $imageDirWithoutCommonPart);
+            foreach ($pathParts as $pathPart) {
+                $this->imageCacheDirCommander->addDirectory($pathPart, true);
+            }
+        }
+    }
+
+    /**
      * @param ImageFileResource $image
      * @param string $destinationPath
      * @param string $newName
@@ -140,22 +159,12 @@ class ImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Optimal\FileManaging\Exception\GDException
      */
-    public function createImageResolutionsVariants(string $imagePath)
+    public function createImageVariants(string $imagePath)
     {
-
-        if(!$this->imageCacheDirCommander){
-            throw new \Exception('Images variants cache directory is not set');
-        }
-
-        if ($this->resolutionSizes == null && $this->thumbResolutionSizes == null) {
-            throw new \Exception('No image resolutions defined');
-        }
-
         $image = new ImageFileResource($imagePath);
         $this->imageDirectoryCommander->setPath($image->getFileDirectoryPath());
 
         $imageVariants = [];
-        $imageThumbsVariants = [];
 
         $imageName = $image->getName();
         $this->imagesManager->setSourceDirectory($image->getFileDirectoryPath());
@@ -163,17 +172,7 @@ class ImageRenderer extends UI\Control
         $cacheDirPath = $this->imageCacheDirCommander->getAbsolutePath();
         $imagePath = $this->imageDirectoryCommander->getAbsolutePath();
 
-        $commonPart = $this->lcs2($imagePath, $cacheDirPath);
-        $imageDirWithoutCommonPart = str_replace($commonPart, "", $imagePath);
-
-        if($this->imageCacheDirCommander->directoryExists($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart)){
-            $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart);
-        } else {
-            $pathParts = explode("/", $imageDirWithoutCommonPart);
-            foreach ($pathParts as $pathPart) {
-                $this->imageCacheDirCommander->addDirectory($pathPart, true);
-            }
-        }
+        $this->checkCachePath($imagePath, $cacheDirPath);
 
         if ($this->resolutionSizes != null) {
 
@@ -217,6 +216,38 @@ class ImageRenderer extends UI\Control
 
         }
 
+        $this->imageCacheDirCommander->setPath($cacheDirPath);
+
+        return $imageVariants;
+    }
+
+    /**
+     * @param string $imageThumbPath
+     * @return array
+     * @throws DirectoryException
+     * @throws FileNotFoundException
+     * @throws \ImagickException
+     * @throws \Optimal\FileManaging\Exception\CreateDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
+     * @throws \Optimal\FileManaging\Exception\FileException
+     * @throws \Optimal\FileManaging\Exception\GDException
+     */
+    public function createImageThumbVariants(string $imageThumbPath)
+    {
+
+        $image = new ImageFileResource($imageThumbPath);
+        $this->imageDirectoryCommander->setPath($image->getFileDirectoryPath());
+
+        $imageThumbsVariants = [];
+
+        $imageName = $image->getName();
+        $this->imagesManager->setSourceDirectory($image->getFileDirectoryPath());
+
+        $cacheDirPath = $this->imageCacheDirCommander->getAbsolutePath();
+        $imageThumbPath = $this->imageDirectoryCommander->getAbsolutePath();
+
+        $this->checkCachePath($imageThumbPath, $cacheDirPath);
+
         if ($this->thumbResolutionSizes != null) {
 
             if (!$this->imageCacheDirCommander) {
@@ -258,6 +289,35 @@ class ImageRenderer extends UI\Control
         }
 
         $this->imageCacheDirCommander->setPath($cacheDirPath);
+
+        return $imageThumbsVariants;
+    }
+
+    /**
+     * @param string $imagePath
+     * @param string $imageThumbPath
+     * @return array
+     * @throws DirectoryException
+     * @throws FileNotFoundException
+     * @throws \ImagickException
+     * @throws \Optimal\FileManaging\Exception\CreateDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
+     * @throws \Optimal\FileManaging\Exception\FileException
+     * @throws \Optimal\FileManaging\Exception\GDException
+     */
+    public function createImageAndThumbResolutionsVariants(string $imagePath, string $imageThumbPath)
+    {
+
+        if(!$this->imageCacheDirCommander){
+            throw new \Exception('Images variants cache directory is not set');
+        }
+
+        if ($this->resolutionSizes == null && $this->thumbResolutionSizes == null) {
+            throw new \Exception('No image resolutions defined');
+        }
+
+        $imageVariants = $this->createImageVariants($imagePath);
+        $imageThumbsVariants = $this->createImageThumbVariants($imageThumbPath);
 
         return ['variants' => $imageVariants, 'thumb_variants' => $imageThumbsVariants];
     }
@@ -313,37 +373,24 @@ class ImageRenderer extends UI\Control
         return trim(preg_replace('/\s\s+/', ' ', $template));
     }
 
-    public function renderImageThumb(string $imagePath, string $alt, string $devicesSizes, bool $lazyLoad = false, array $attributes = [])
+    /**
+     * @param string $imageThumbPath
+     * @param string $alt
+     * @param string|null $caption
+     * @param string $devicesSizes
+     * @param bool $lazyLoad
+     * @param array $attributes
+     * @return string|null
+     * @throws \ImagickException
+     */
+    public function renderImageThumb(string $imageThumbPath, string $alt, string $caption = null, string $devicesSizes = "", bool $lazyLoad = false, array $attributes = [])
     {
-        $imageData = $this->createImageResolutionsVariants($imagePath);
         $this->template->setFile(__DIR__ . '/templates/image.latte');
-        $this->template->imgTag = $this->renderImgTag($imageData["thumb_variants"], $alt, $devicesSizes, $lazyLoad, $attributes);
-        if($this->presenter->isAjax()){
-            return (string) $this->template;
-        } else {
-            $this->template->render();
-            return null;
-        }
-    }
 
-    public function renderImage(string $imagePath, string $alt, string $devicesSizes, bool $lazyLoad = false, array $attributes = [])
-    {
-        $imageData = $this->createImageResolutionsVariants($imagePath);
-        $this->template->setFile(__DIR__ . '/templates/image.latte');
-        $this->template->imgTag = $this->renderImgTag($imageData["variants"], $alt, $devicesSizes, $lazyLoad, $attributes);
-        if($this->presenter->isAjax()){
-            return (string) $this->template;
-        } else {
-            $this->template->render();
-            return null;
-        }
-    }
+        // Todo somehow cache this
+        $imageData = $this->createImageThumbVariants($imageThumbPath);
+        $this->template->imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
 
-    public function renderImageThumbWithCaption(string $imagePath, string $alt, string $devicesSizes, string $caption, bool $lazyLoad = false, array $attributes = [])
-    {
-        $imageData = $this->createImageResolutionsVariants($imagePath);
-        $this->template->setFile(__DIR__ . '/templates/image.latte');
-        $this->template->imgTag = $this->renderImgTag($imageData["thumb_variants"], $alt, $devicesSizes, $lazyLoad, $attributes);
         $this->template->caption = $caption;
         if($this->presenter->isAjax()){
             return (string) $this->template;
@@ -353,12 +400,21 @@ class ImageRenderer extends UI\Control
         }
     }
 
-    public function renderImageWithCaption(string $imagePath, string $alt, string $devicesSizes, string $caption, bool $lazyLoad = false, array $attributes = [])
+    /**
+     * @param string $imagePath
+     * @param string $alt
+     * @param string|null $caption
+     * @param string $devicesSizes
+     * @param bool $lazyLoad
+     * @param array $attributes
+     * @return string|null
+     * @throws \ImagickException
+     */
+    public function renderImage(string $imagePath, string $alt, string $caption = null, string $devicesSizes = "", bool $lazyLoad = false, array $attributes = [])
     {
-        $imageData = $this->createImageResolutionsVariants($imagePath);
+        $imageData = $this->createImageVariants($imagePath);
         $this->template->setFile(__DIR__ . '/templates/image.latte');
-        $this->template->imgTag = $this->renderImgTag($imageData["variants"], $alt, $devicesSizes, $lazyLoad, $attributes);
-        $this->template->caption = $caption;
+        $this->template->imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
         if($this->presenter->isAjax()){
             return (string) $this->template;
         } else {
