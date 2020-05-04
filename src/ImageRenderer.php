@@ -208,7 +208,7 @@ class ImageRenderer extends UI\Control
             }
 
             if(empty($imageVariants)){
-                $newName = $imageName . (($image->getWidth() > 0) ? '-w' . $image->getWidth() : '') . (($image->getHeight() > 0) ? '-h' . $image->getHeight : '');
+                $newName = $imageName . (($image->getWidth() > 0) ? '-w' . $image->getWidth() : '') . (($image->getHeight() > 0) ? '-h' . $image->getHeight() : '');
                 copy($image->getFilePath(), $this->imageCacheDirCommander->getAbsolutePath()."/".$newName.".".$image->getExtension());
                 array_push($imageVariants, $this->imageCacheDirCommander->getImage($newName, $image->getExtension(), false, false));
             }
@@ -240,7 +240,7 @@ class ImageRenderer extends UI\Control
                     continue;
                 }
 
-                $newName = $imageName . '-thumb-' . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
+                $newName = $imageName . '-thumb' . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
                 $extension = $resolutionSize->getExtension() == "default" ? $image->getExtension() : $resolutionSize->getExtension();
 
                 /** @var ImageFileResource $imageVariant */
@@ -250,7 +250,7 @@ class ImageRenderer extends UI\Control
             }
 
             if(empty($imageThumbsVariants)){
-                $newName = $imageName .'-thumb-'. (($image->getWidth() > 0) ? '-w' . $image->getWidth() : '') . (($image->getHeight() > 0) ? '-h' . $image->getHeight : '');
+                $newName = $imageName .'-thumb'. (($image->getWidth() > 0) ? '-w' . $image->getWidth() : '') . (($image->getHeight() > 0) ? '-h' . $image->getHeight() : '');
                 copy($image->getFilePath(), $this->imageCacheDirCommander->getAbsolutePath()."/".$newName.".".$image->getExtension());
                 array_push($imageThumbsVariants, $this->imageCacheDirCommander->getImage($newName, $image->getExtension(), false, false));
             }
