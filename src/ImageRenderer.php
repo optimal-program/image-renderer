@@ -3,6 +3,8 @@
 namespace Optimal\ImageRenderer;
 
 use Nette\Application\UI;
+use Nette\Caching\Cache;
+
 use Optimal\FileManaging\Exception\DirectoryException;
 use Optimal\FileManaging\Exception\FileNotFoundException;
 use Optimal\FileManaging\FileCommander;
@@ -16,7 +18,7 @@ class ImageRenderer extends UI\Control
 {
 
     /** @var UI\ITemplateFactory */
-    public $templateFactory;
+    private $templateFactory;
 
     /** @var FileCommander */
     private $imageDirectoryCommander;
@@ -27,17 +29,21 @@ class ImageRenderer extends UI\Control
     /** @var ImagesManager */
     private $imagesManager;
 
+    /** @var Cache */
+    private $cache;
+
     /** @var ImageResolutionsSettings */
     protected $resolutionSizes = null;
 
     /** @var ImageResolutionsSettings */
     protected $thumbResolutionSizes = null;
 
-    public function __construct(UI\ITemplateFactory $templateFactory)
+    public function __construct(UI\ITemplateFactory $templateFactory, Cache $cache)
     {
         $this->templateFactory = $templateFactory;
         $this->imageDirectoryCommander = new FileCommander();
         $this->imagesManager = new ImagesManager();
+        $this->cache = $cache;
     }
 
     /**
@@ -97,7 +103,7 @@ class ImageRenderer extends UI\Control
      * @param string $imagePath
      * @param string $cacheDirPath
      */
-    protected function checkCachePath(string $imagePath, string $cacheDirPath)
+    protected function checkImagesCachePath(string $imagePath, string $cacheDirPath)
     {
         $commonPart = $this->lcs2($imagePath, $cacheDirPath);
         $imageDirWithoutCommonPart = str_replace($commonPart, "", $imagePath);
@@ -172,7 +178,7 @@ class ImageRenderer extends UI\Control
         $cacheDirPath = $this->imageCacheDirCommander->getAbsolutePath();
         $imagePath = $this->imageDirectoryCommander->getAbsolutePath();
 
-        $this->checkCachePath($imagePath, $cacheDirPath);
+        $this->checkImagesCachePath($imagePath, $cacheDirPath);
 
         if ($this->resolutionSizes != null) {
 
@@ -246,7 +252,7 @@ class ImageRenderer extends UI\Control
         $cacheDirPath = $this->imageCacheDirCommander->getAbsolutePath();
         $imageThumbPath = $this->imageDirectoryCommander->getAbsolutePath();
 
-        $this->checkCachePath($imageThumbPath, $cacheDirPath);
+        $this->checkImagesCachePath($imageThumbPath, $cacheDirPath);
 
         if ($this->thumbResolutionSizes != null) {
 
@@ -374,6 +380,19 @@ class ImageRenderer extends UI\Control
     }
 
     /**
+     * @param ImageResolutionsSettings $resolutions
+     * @return string
+     */
+    protected function serializeResolutionSizes(ImageResolutionsSettings $resolutions)
+    {
+        $arr = "";
+        foreach ($this->thumbResolutionSizes->getResolutionsSettings() as $resolutionSize) {
+            $arr[] = 'w'.$resolutionSize->getWidth().",h".$resolutionSize->getHeight();
+        }
+        return join(';', $arr);
+    }
+
+    /**
      * @param string $imageThumbPath
      * @param string $alt
      * @param string|null $caption
@@ -387,11 +406,29 @@ class ImageRenderer extends UI\Control
     {
         $this->template->setFile(__DIR__ . '/templates/image.latte');
 
-        // Todo somehow cache this
-        $imageData = $this->createImageThumbVariants($imageThumbPath);
-        $this->template->imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
+        if(!$this->imageCacheDirCommander){
+            throw new \Exception('Images variants cache directory is not set');
+        }
 
+        if ($this->thumbResolutionSizes == null) {
+            throw new \Exception('No image resolutions defined');
+        }
+
+        $key = md5($imageThumbPath.$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
+
+        $imgTag = $this->cache->load($key);
+        if(!$imgTag){
+            $imageData = $this->createImageThumbVariants($imageThumbPath);
+            $imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
+            $this->cache->save($key, $imgTag, [
+                Cache::EXPIRE => '20 minutes',
+                Cache::SLIDING => true,
+            ]);
+        }
+
+        $this->template->imgTag = $imgTag;
         $this->template->caption = $caption;
+
         if($this->presenter->isAjax()){
             return (string) $this->template;
         } else {
@@ -412,9 +449,31 @@ class ImageRenderer extends UI\Control
      */
     public function renderImage(string $imagePath, string $alt, string $caption = null, string $devicesSizes = "", bool $lazyLoad = false, array $attributes = [])
     {
-        $imageData = $this->createImageVariants($imagePath);
         $this->template->setFile(__DIR__ . '/templates/image.latte');
-        $this->template->imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
+
+        if(!$this->imageCacheDirCommander){
+            throw new \Exception('Images variants cache directory is not set');
+        }
+
+        if ($this->resolutionSizes == null) {
+            throw new \Exception('No image resolutions defined');
+        }
+
+        $key = md5($imagePath.$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
+
+        $imgTag = $this->cache->load($key);
+        if(!$imgTag){
+            $imageData = $this->createImageVariants($imagePath);
+            $imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
+            $this->cache->save($key, $imgTag, [
+                Cache::EXPIRE => '20 minutes',
+                Cache::SLIDING => true,
+            ]);
+        }
+
+        $this->template->imgTag = $imgTag;
+        $this->template->caption = $caption;
+
         if($this->presenter->isAjax()){
             return (string) $this->template;
         } else {
