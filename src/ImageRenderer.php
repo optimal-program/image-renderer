@@ -386,7 +386,7 @@ class ImageRenderer extends UI\Control
     protected function serializeResolutionSizes(ImageResolutionsSettings $resolutions)
     {
         $arr = [];
-        foreach ($this->thumbResolutionSizes->getResolutionsSettings() as $resolutionSize) {
+        foreach ($resolutions as $resolutionSize) {
             $arr[] = 'w'.$resolutionSize->getWidth().",h".$resolutionSize->getHeight();
         }
         return join(';', $arr);
