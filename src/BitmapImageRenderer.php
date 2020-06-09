@@ -447,7 +447,7 @@ class BitmapImageRenderer extends UI\Control
             throw new \Exception('No large image resolutions defined');
         }
 
-        $key2 = md5($imageThumbPath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes));
+        $key2 = md5($imageThumbPath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes)).$lightboxGroup;
 
         $largeImageSrcSet = $this->cache->load($key2);
         if (!$largeImageSrcSet) {
@@ -521,7 +521,7 @@ class BitmapImageRenderer extends UI\Control
             throw new \Exception('No image resolutions defined');
         }
 
-        $key = md5($imagePath.$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes)).'2';
+        $key = md5($imagePath.$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
 
         $imgTag  = $this->cache->load($key);
         if(!$imgTag){
@@ -552,7 +552,7 @@ class BitmapImageRenderer extends UI\Control
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $imgTag = $this->prepareImage($imagePath, $alt, $lazyLoad, $devicesSizes, $attributes);
 
-        $key2 = md5($imagePath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes)).'2';
+        $key2 = md5($imagePath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes)).$lightboxGroup;
 
         $largeImageSrcSet = $this->cache->load($key2);
         if (!$largeImageSrcSet) {
