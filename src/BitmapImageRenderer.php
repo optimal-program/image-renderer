@@ -446,7 +446,7 @@ class BitmapImageRenderer extends UI\Control
             ]);
         }
 
-        return $srcSet;
+        echo $srcSet;
     }
 
     /**
@@ -579,7 +579,7 @@ class BitmapImageRenderer extends UI\Control
             ]);
         }
 
-        return $srcSet;
+        echo $srcSet;
     }
 
     /**
