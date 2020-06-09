@@ -428,6 +428,29 @@ class BitmapImageRenderer extends UI\Control
 
     /**
      * @param string $imageThumbPath
+     * @return string
+     * @throws \ImagickException
+     */
+    public function renderImageThumbSrcSet(string $imageThumbPath)
+    {
+        $key = md5($imageThumbPath);
+
+        $srcSet = $this->cache->load($key);
+        if(!$srcSet) {
+            $imageData = $this->createImageThumbVariants($imageThumbPath);
+            $srcSet = $this->prepareSrcSet($imageData);
+
+            $this->cache->save($key, $srcSet, [
+                Cache::EXPIRE => '20 minutes',
+                Cache::SLIDING => true,
+            ]);
+        }
+
+        return $srcSet;
+    }
+
+    /**
+     * @param string $imageThumbPath
      * @param string $imagePath
      * @param string $alt
      * @param string $lightboxGroup
@@ -534,6 +557,29 @@ class BitmapImageRenderer extends UI\Control
         }
 
         return $imgTag;
+    }
+
+    /**
+     * @param string $imagePath
+     * @return string
+     * @throws \ImagickException
+     */
+    public function renderImageSrcSet(string $imagePath)
+    {
+        $key = md5($imagePath);
+
+        $srcSet = $this->cache->load($key);
+        if(!$srcSet) {
+            $imageData = $this->createImageVariants($imagePath);
+            $srcSet = $this->prepareSrcSet($imageData);
+
+            $this->cache->save($key, $srcSet, [
+                Cache::EXPIRE => '20 minutes',
+                Cache::SLIDING => true,
+            ]);
+        }
+
+        return $srcSet;
     }
 
     /**
