@@ -552,10 +552,7 @@ class BitmapImageRenderer extends UI\Control
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $imgTag = $this->prepareImage($imagePath, $alt, $lazyLoad, $devicesSizes, $attributes);
 
-        $this->template->lightbox = true;
-        $this->template->lightboxGroup = $lightboxGroup;
-
-        $key2 = md5($imagePath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes));
+        $key2 = md5($imagePath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes)).'2';
 
         $largeImageSrcSet = $this->cache->load($key2);
         if (!$largeImageSrcSet) {
@@ -596,6 +593,7 @@ class BitmapImageRenderer extends UI\Control
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $imgTag = $this->prepareImage($imagePath, $alt, $lazyLoad, $devicesSizes, $attributes);
 
+        $this->template->lightbox = false;
         $this->template->caption = $caption;
 
         if($this->presenter->isAjax()){
