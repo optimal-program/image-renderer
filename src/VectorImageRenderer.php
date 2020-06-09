@@ -4,7 +4,7 @@ namespace Optimal\ImageRenderer;
 
 use Nette\Application\UI;
 
-class VectorImageRenderer
+class VectorImageRenderer extends UI\Control
 {
 
     /** @var UI\ITemplateFactory */
