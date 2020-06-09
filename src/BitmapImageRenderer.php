@@ -451,7 +451,7 @@ class BitmapImageRenderer extends UI\Control
 
         $largeImageSrcSet = $this->cache->load($key2);
         if (!$largeImageSrcSet) {
-            $imageData = $this->createImageThumbVariants($imagePath);
+            $imageData = $this->createImageVariants($imagePath);
             $largeImageSrcSet = $this->prepareSrcSet($imageData);
             $this->cache->save($key2, $largeImageSrcSet, [
                 Cache::EXPIRE => '20 minutes',
@@ -521,7 +521,7 @@ class BitmapImageRenderer extends UI\Control
             throw new \Exception('No image resolutions defined');
         }
 
-        $key = md5($imagePath.$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
+        $key = md5($imagePath.$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes)).'2';
 
         $imgTag  = $this->cache->load($key);
         if(!$imgTag){
@@ -556,7 +556,7 @@ class BitmapImageRenderer extends UI\Control
 
         $largeImageSrcSet = $this->cache->load($key2);
         if (!$largeImageSrcSet) {
-            $imageData = $this->createImageThumbVariants($imagePath);
+            $imageData = $this->createImageVariants($imagePath);
             $largeImageSrcSet = $this->prepareSrcSet($imageData);
             $this->cache->save($key2, $largeImageSrcSet, [
                 Cache::EXPIRE => '20 minutes',
