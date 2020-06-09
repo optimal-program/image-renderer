@@ -11,5 +11,11 @@
         <figcaption>{$caption}</figcaption>
     </figure>
 {else}
-    {$imgTag|noescape}
+    {if $lightbox}
+        <a href="{$linkSrcSet}" data-lightbox="{$lightboxGroup}">
+            {$imgTag|noescape}
+        </a>
+    {else}
+        {$imgTag|noescape}
+    {/if}
 {/if}
