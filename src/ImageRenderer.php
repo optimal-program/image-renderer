@@ -395,14 +395,15 @@ class ImageRenderer extends UI\Control
     /**
      * @param string $imageThumbPath
      * @param string $alt
-     * @param string|null $caption
-     * @param string $devicesSizes
      * @param bool $lazyLoad
+     * @param array $lightboxParams
+     * @param string $devicesSizes
+     * @param string|null $caption
      * @param array $attributes
      * @return string|null
      * @throws \ImagickException
      */
-    public function renderImageThumb(string $imageThumbPath, string $alt, string $caption = null, string $devicesSizes = "", bool $lazyLoad = false, array $attributes = [])
+    public function renderImageThumb(string $imageThumbPath, string $alt, bool $lazyLoad = false, array $lightboxParams = ['imagePath' => null, 'group' => ''], string $devicesSizes = "", string $caption = null, array $attributes = [])
     {
         $this->template->setFile(__DIR__ . '/templates/image.latte');
 
@@ -411,7 +412,11 @@ class ImageRenderer extends UI\Control
         }
 
         if ($this->thumbResolutionSizes == null) {
-            throw new \Exception('No image resolutions defined');
+            throw new \Exception('No image thumb resolutions defined');
+        }
+
+        if($lightboxParams['imagePath'] != null && $this->resolutionSizes == null){
+            throw new \Exception('No large image resolutions defined');
         }
 
         $key = md5($imageThumbPath.$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
@@ -424,6 +429,25 @@ class ImageRenderer extends UI\Control
                 Cache::EXPIRE => '20 minutes',
                 Cache::SLIDING => true,
             ]);
+        }
+
+        $this->template->lightbox = false;
+        $this->template->linkSrcSet = null;
+        if($lightboxParams['imagePath'] != null) {
+            $key2 = md5($imageThumbPath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes));
+
+            $largeImageSrcSet = $this->cache->load($key2);
+            if (!$largeImageSrcSet) {
+                $imageData = $this->createImageThumbVariants($lightboxParams['imagePath']);
+                $largeImageSrcSet = $this->prepareSrcSet($imageData);
+                $this->cache->save($key2, $largeImageSrcSet, [
+                    Cache::EXPIRE => '20 minutes',
+                    Cache::SLIDING => true,
+                ]);
+            }
+
+            $this->template->lightbox = true;
+            $this->template->linkSrcSet = $largeImageSrcSet;
         }
 
         $this->template->imgTag = $imgTag;
@@ -440,14 +464,15 @@ class ImageRenderer extends UI\Control
     /**
      * @param string $imagePath
      * @param string $alt
-     * @param string|null $caption
-     * @param string $devicesSizes
      * @param bool $lazyLoad
+     * @param string|null $lightboxGroup
+     * @param string $devicesSizes
+     * @param string|null $caption
      * @param array $attributes
      * @return string|null
      * @throws \ImagickException
      */
-    public function renderImage(string $imagePath, string $alt, string $caption = null, string $devicesSizes = "", bool $lazyLoad = false, array $attributes = [])
+    public function renderImage(string $imagePath, string $alt, bool $lazyLoad = false, ?string $lightboxGroup = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
     {
         $this->template->setFile(__DIR__ . '/templates/image.latte');
 
@@ -461,15 +486,19 @@ class ImageRenderer extends UI\Control
 
         $key = md5($imagePath.$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
 
-        $imgTag = $this->cache->load($key);
+        [$imgTag, $srcSet]  = $this->cache->load($key);
         if(!$imgTag){
             $imageData = $this->createImageVariants($imagePath);
+            $srcSet = $this->prepareSrcSet($imageData);
             $imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
-            $this->cache->save($key, $imgTag, [
+            $this->cache->save($key, [$imgTag, $srcSet], [
                 Cache::EXPIRE => '20 minutes',
                 Cache::SLIDING => true,
             ]);
         }
+
+        $this->template->lightbox = $lightboxGroup != null;
+        $this->template->linkSrcSet = $srcSet;
 
         $this->template->imgTag = $imgTag;
         $this->template->caption = $caption;
