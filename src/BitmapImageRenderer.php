@@ -527,7 +527,7 @@ class BitmapImageRenderer extends UI\Control
         if(!$imgTag){
             $imageData = $this->createImageVariants($imagePath);
             $imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
-            $this->cache->save($key, [$imgTag], [
+            $this->cache->save($key, $imgTag, [
                 Cache::EXPIRE => '20 minutes',
                 Cache::SLIDING => true,
             ]);
