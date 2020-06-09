@@ -2,6 +2,8 @@
 
 namespace Optimal\ImageRenderer;
 
+use Nette\Application\UI;
+
 class VectorImageRenderer
 {
 
