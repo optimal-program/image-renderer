@@ -598,6 +598,23 @@ class BitmapImageRenderer extends UI\Control
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $imgTag = $this->prepareImage($imagePath, $alt, $lazyLoad, $devicesSizes, $attributes);
 
+        $smallImageSrcSet = null;
+        if($this->thumbResolutionSizes){
+
+            $key = md5($imagePath . $this->serializeResolutionSizes($this->thumbResolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes)).$lightboxGroup;
+
+            $smallImageSrcSet = $this->cache->load($key);
+            if (!$smallImageSrcSet) {
+                $imageData = $this->createImageThumbVariants($imagePath);
+                $smallImageSrcSet = $this->prepareSrcSet($imageData);
+                $this->cache->save($key, $smallImageSrcSet, [
+                    Cache::EXPIRE => '20 minutes',
+                    Cache::SLIDING => true,
+                ]);
+            }
+
+        }
+
         $key2 = md5($imagePath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes)).$lightboxGroup;
 
         $largeImageSrcSet = $this->cache->load($key2);
@@ -612,7 +629,7 @@ class BitmapImageRenderer extends UI\Control
 
         $this->template->lightbox = true;
         $this->template->lightboxGroup = $lightboxGroup;
-        $this->template->linkSrcSet = $largeImageSrcSet;
+        $this->template->linkSrcSet = $smallImageSrcSet ? $smallImageSrcSet : $largeImageSrcSet;
 
         $this->template->caption = $caption;
 
