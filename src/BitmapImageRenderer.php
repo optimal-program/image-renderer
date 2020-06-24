@@ -398,6 +398,7 @@ class BitmapImageRenderer extends UI\Control
         } else {
             if ($this->defaultLazyLoad != null) {
                 if ($this->defaultLazyLoad) {
+                    $lazyLoad = true;
                     array_push($classes, 'lazy-image');
                 }
             }
