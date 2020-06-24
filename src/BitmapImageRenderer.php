@@ -395,13 +395,6 @@ class BitmapImageRenderer extends UI\Control
             if ($lazyLoad) {
                 array_push($classes, 'lazy-image');
             }
-        } else {
-            if ($this->defaultLazyLoad != null) {
-                if ($this->defaultLazyLoad) {
-                    $lazyLoad = true;
-                    array_push($classes, 'lazy-image');
-                }
-            }
         }
 
         if(isset($attributes["class"])){
@@ -410,7 +403,7 @@ class BitmapImageRenderer extends UI\Control
         }
 
         $template->class = $this->prepareClass($classes);
-        $template->sizes = !empty($devicesSizes) ? $devicesSizes : $this->defaultSizes;
+        $template->sizes = $devicesSizes;
         $template->attributes = $attributes;
         $template->lazyLoad = $lazyLoad;
 
@@ -431,6 +424,20 @@ class BitmapImageRenderer extends UI\Control
         return join(';', $arr);
     }
 
+    protected function checkDefaultParams(?bool $lazyLoad = null, string $devicesSizes = "")
+    {
+
+        if($lazyLoad == null && $this->defaultLazyLoad != null){
+            $lazyLoad = $this->defaultLazyLoad;
+        }
+
+        if(empty($devicesSizes) && !empty($this->defaultSizes)){
+            $devicesSizes = $this->defaultSizes;
+        }
+
+        return [$lazyLoad, $devicesSizes];
+    }
+
     /**
      * @param string $imageThumbPath
      * @param string $alt
@@ -449,6 +456,8 @@ class BitmapImageRenderer extends UI\Control
         if ($this->thumbResolutionSizes == null) {
             throw new \Exception('No image thumb resolutions defined');
         }
+
+        [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
 
         $key = md5($imageThumbPath.$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
 
@@ -507,6 +516,8 @@ class BitmapImageRenderer extends UI\Control
         if ($this->resolutionSizes == null) {
             throw new \Exception('No large image resolutions defined');
         }
+
+        [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
 
         $key2 = md5($imageThumbPath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes)).$lightboxGroup;
 
@@ -582,6 +593,8 @@ class BitmapImageRenderer extends UI\Control
             throw new \Exception('No image resolutions defined');
         }
 
+        [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
+
         $key = md5($imagePath.$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
 
         $imgTag  = $this->cache->load($key);
@@ -635,6 +648,8 @@ class BitmapImageRenderer extends UI\Control
     {
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $imgTag = $this->prepareImage($imagePath, $alt, $lazyLoad, $devicesSizes, $attributes);
+
+        [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
 
         $smallImageSrcSet = null;
         if($this->thumbResolutionSizes){
