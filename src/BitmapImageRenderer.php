@@ -38,6 +38,12 @@ class BitmapImageRenderer extends UI\Control
     /** @var ImageResolutionsSettings */
     protected $thumbResolutionSizes = null;
 
+    /** @var ?bool */
+    protected $defaultLazyLoad = null;
+
+    /** @var string */
+    protected $defaultSizes = '';
+
     public function __construct(UI\ITemplateFactory $templateFactory, Cache $cache)
     {
         $this->templateFactory = $templateFactory;
@@ -67,6 +73,22 @@ class BitmapImageRenderer extends UI\Control
      */
     public function setImageThumbVariantsResolutions(ImageResolutionsSettings $sizes){
         $this->thumbResolutionSizes = $sizes;
+    }
+
+    /**
+     * @param bool $defaultLazyLoad
+     */
+    public function setDefaultLazyLoad(bool $defaultLazyLoad): void
+    {
+        $this->defaultLazyLoad = $defaultLazyLoad;
+    }
+
+    /**
+     * @param string $defaultSizes
+     */
+    public function setDefaultSizes(string $defaultSizes): void
+    {
+        $this->defaultSizes = $defaultSizes;
     }
 
     protected function lcs2($first, $second)
@@ -328,6 +350,10 @@ class BitmapImageRenderer extends UI\Control
         return ['variants' => $imageVariants, 'thumb_variants' => $imageThumbsVariants];
     }
 
+    /**
+     * @param array $variants
+     * @return string
+     */
     protected function prepareSrcSet(array $variants)
     {
         $template = $this->templateFactory->createTemplate();
@@ -336,6 +362,10 @@ class BitmapImageRenderer extends UI\Control
         return trim(preg_replace('/\s\s+/', ' ', $template));
     }
 
+    /**
+     * @param array $classes
+     * @return string
+     */
     protected function prepareClass(array $classes)
     {
         $template = $this->templateFactory->createTemplate();
@@ -348,11 +378,11 @@ class BitmapImageRenderer extends UI\Control
      * @param ImageFileResource[] $imageData
      * @param string $alt
      * @param string $devicesSizes
-     * @param bool $lazyLoad
+     * @param bool|null $lazyLoad
      * @param array $attributes
      * @return string
      */
-    protected function renderImgTag(array $imageData, string $alt, string $devicesSizes, bool $lazyLoad = false, array $attributes = [])
+    protected function renderImgTag(array $imageData, string $alt, string $devicesSizes, ?bool $lazyLoad, array $attributes = [])
     {
         $template = $this->templateFactory->createTemplate();
         $template->src = $imageData[0]->getFileRelativePath();
@@ -361,8 +391,16 @@ class BitmapImageRenderer extends UI\Control
 
         $classes = [];
 
-        if($lazyLoad){
-            array_push($classes, 'lazy-image');
+        if($lazyLoad != null) {
+            if ($lazyLoad) {
+                array_push($classes, 'lazy-image');
+            }
+        } else {
+            if ($this->defaultLazyLoad != null) {
+                if ($this->defaultLazyLoad) {
+                    array_push($classes, 'lazy-image');
+                }
+            }
         }
 
         if(isset($attributes["class"])){
@@ -371,7 +409,7 @@ class BitmapImageRenderer extends UI\Control
         }
 
         $template->class = $this->prepareClass($classes);
-        $template->sizes = $devicesSizes;
+        $template->sizes = !empty($devicesSizes) ? $devicesSizes : $this->defaultSizes;
         $template->attributes = $attributes;
         $template->lazyLoad = $lazyLoad;
 
@@ -395,13 +433,13 @@ class BitmapImageRenderer extends UI\Control
     /**
      * @param string $imageThumbPath
      * @param string $alt
-     * @param bool $lazyLoad
+     * @param bool|null $lazyLoad
      * @param string $devicesSizes
      * @param array $attributes
      * @return string
      * @throws \ImagickException
      */
-    protected function prepareImageThumb(string $imageThumbPath, string $alt, bool $lazyLoad = false, string $devicesSizes = "", array $attributes = [])
+    protected function prepareImageThumb(string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", array $attributes = [])
     {
         if(!$this->imageCacheDirCommander){
             throw new \Exception('Images variants cache directory is not set');
@@ -428,7 +466,6 @@ class BitmapImageRenderer extends UI\Control
 
     /**
      * @param string $imageThumbPath
-     * @return string
      * @throws \ImagickException
      */
     public function renderImageThumbSrcSet(string $imageThumbPath)
@@ -454,14 +491,14 @@ class BitmapImageRenderer extends UI\Control
      * @param string $imagePath
      * @param string $alt
      * @param string $lightboxGroup
-     * @param bool $lazyLoad
+     * @param bool|null $lazyLoad
      * @param string $devicesSizes
      * @param string|null $caption
      * @param array $attributes
      * @return string|null
      * @throws \ImagickException
      */
-    public function renderImageThumbWithLightbox(string $imageThumbPath, string $imagePath, string $alt, string $lightboxGroup = 'example-set', bool $lazyLoad = false, string $devicesSizes = "", string $caption = null, array $attributes = [])
+    public function renderImageThumbWithLightbox(string $imageThumbPath, string $imagePath, string $alt, string $lightboxGroup = 'example-set', ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
     {
         $this->template->imgTag = $imgTag = $this->prepareImageThumb($imageThumbPath, $alt, $lazyLoad, $devicesSizes, $attributes);
         $this->template->caption = $caption;
@@ -499,14 +536,14 @@ class BitmapImageRenderer extends UI\Control
     /**
      * @param string $imageThumbPath
      * @param string $alt
-     * @param bool $lazyLoad
+     * @param bool|null $lazyLoad
      * @param string $devicesSizes
      * @param string|null $caption
      * @param array $attributes
      * @return string|null
      * @throws \ImagickException
      */
-    public function renderImageThumb(string $imageThumbPath, string $alt, bool $lazyLoad = false, string $devicesSizes = "", string $caption = null, array $attributes = [])
+    public function renderImageThumb(string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
     {
         $this->template->setFile(__DIR__ . '/templates/image.latte');
 
@@ -527,13 +564,13 @@ class BitmapImageRenderer extends UI\Control
     /**
      * @param string $imagePath
      * @param string $alt
-     * @param bool $lazyLoad
+     * @param bool|null $lazyLoad
      * @param string $devicesSizes
      * @param array $attributes
      * @return string
      * @throws \ImagickException
      */
-    protected function prepareImage(string $imagePath, string $alt, bool $lazyLoad = false, string $devicesSizes = "", array $attributes = [])
+    protected function prepareImage(string $imagePath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", array $attributes = [])
     {
 
         if(!$this->imageCacheDirCommander){
@@ -585,7 +622,7 @@ class BitmapImageRenderer extends UI\Control
     /**
      * @param string $imagePath
      * @param string $alt
-     * @param bool $lazyLoad
+     * @param bool|null $lazyLoad
      * @param string|null $lightboxGroup
      * @param string $devicesSizes
      * @param string|null $caption
@@ -593,7 +630,7 @@ class BitmapImageRenderer extends UI\Control
      * @return string|null
      * @throws \ImagickException
      */
-    public function renderImageWithLightbox(string $imagePath, string $alt, bool $lazyLoad = false, ?string $lightboxGroup = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
+    public function renderImageWithLightbox(string $imagePath, string $alt, ?bool $lazyLoad = null, ?string $lightboxGroup = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
     {
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $imgTag = $this->prepareImage($imagePath, $alt, $lazyLoad, $devicesSizes, $attributes);
@@ -644,14 +681,14 @@ class BitmapImageRenderer extends UI\Control
     /**
      * @param string $imagePath
      * @param string $alt
-     * @param bool $lazyLoad
+     * @param bool|null $lazyLoad
      * @param string $devicesSizes
      * @param string|null $caption
      * @param array $attributes
      * @return string|null
      * @throws \ImagickException
      */
-    public function renderImage(string $imagePath, string $alt, bool $lazyLoad = false, string $devicesSizes = "", string $caption = null, array $attributes = [])
+    public function renderImage(string $imagePath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
     {
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $imgTag = $this->prepareImage($imagePath, $alt, $lazyLoad, $devicesSizes, $attributes);
