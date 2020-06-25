@@ -633,6 +633,10 @@ class BitmapImageRenderer extends UI\Control
         echo $srcSet;
     }
 
+    public function renderDefaultSizes(){
+        echo $this->defaultSizes;
+    }
+
     /**
      * @param string $imagePath
      * @param string $alt
