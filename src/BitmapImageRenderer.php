@@ -521,6 +521,10 @@ class BitmapImageRenderer extends UI\Control
         echo $srcSet;
     }
 
+    public function renderDefaultThumbSizes(){
+        echo $this->defaultThumbSizes;
+    }
+
     /**
      * @param string $imageThumbPath
      * @param string $imagePath
