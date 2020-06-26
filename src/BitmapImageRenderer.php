@@ -42,6 +42,9 @@ class BitmapImageRenderer extends UI\Control
     protected $defaultLazyLoad = null;
 
     /** @var string */
+    protected $defaultThumbSizes = '';
+
+    /** @var string */
     protected $defaultSizes = '';
 
     public function __construct(UI\ITemplateFactory $templateFactory, Cache $cache)
@@ -89,6 +92,14 @@ class BitmapImageRenderer extends UI\Control
     public function setDefaultSizes(string $defaultSizes): void
     {
         $this->defaultSizes = $defaultSizes;
+    }
+
+    /**
+     * @param string $defaultThumbSizes
+     */
+    public function setDefaultThumbSizes(string $defaultThumbSizes): void
+    {
+        $this->defaultThumbSizes = $defaultThumbSizes;
     }
 
     protected function lcs2($first, $second)
@@ -424,6 +435,20 @@ class BitmapImageRenderer extends UI\Control
         return join(';', $arr);
     }
 
+    protected function checkThumbDefaultParams(?bool $lazyLoad = null, string $devicesSizes = "")
+    {
+
+        if($lazyLoad == null && $this->defaultLazyLoad != null){
+            $lazyLoad = $this->defaultLazyLoad;
+        }
+
+        if(empty($devicesSizes) && !empty($this->defaultThumbSizes)){
+            $devicesSizes = $this->defaultThumbSizes;
+        }
+
+        return [$lazyLoad, $devicesSizes];
+    }
+
     protected function checkDefaultParams(?bool $lazyLoad = null, string $devicesSizes = "")
     {
 
@@ -457,7 +482,7 @@ class BitmapImageRenderer extends UI\Control
             throw new \Exception('No image thumb resolutions defined');
         }
 
-        [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
+        [$lazyLoad, $devicesSizes] = $this->checkThumbDefaultParams($lazyLoad, $devicesSizes);
 
         $key = md5($imageThumbPath.$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
 
