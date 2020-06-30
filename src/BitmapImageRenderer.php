@@ -466,7 +466,7 @@ class BitmapImageRenderer extends UI\Control
             $imageData = $this->createImageThumbVariants($imageThumbPath);
             $imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
             $this->cache->save($key, $imgTag, [
-                Cache::EXPIRE => '20 minutes',
+                Cache::EXPIRE => '12 months',
                 Cache::SLIDING => true,
             ]);
         }
@@ -488,7 +488,7 @@ class BitmapImageRenderer extends UI\Control
             $srcSet = $this->prepareSrcSet($imageData);
 
             $this->cache->save($key, $srcSet, [
-                Cache::EXPIRE => '20 minutes',
+                Cache::EXPIRE => '12 months',
                 Cache::SLIDING => true,
             ]);
         }
@@ -526,7 +526,7 @@ class BitmapImageRenderer extends UI\Control
             $imageData = $this->createImageVariants($imagePath);
             $largeImageSrcSet = $this->prepareSrcSet($imageData);
             $this->cache->save($key2, $largeImageSrcSet, [
-                Cache::EXPIRE => '20 minutes',
+                Cache::EXPIRE => '12 months',
                 Cache::SLIDING => true,
             ]);
         }
@@ -602,7 +602,7 @@ class BitmapImageRenderer extends UI\Control
             $imageData = $this->createImageVariants($imagePath);
             $imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
             $this->cache->save($key, $imgTag, [
-                Cache::EXPIRE => '20 minutes',
+                Cache::EXPIRE => '12 months',
                 Cache::SLIDING => true,
             ]);
         }
@@ -625,7 +625,7 @@ class BitmapImageRenderer extends UI\Control
             $srcSet = $this->prepareSrcSet($imageData);
 
             $this->cache->save($key, $srcSet, [
-                Cache::EXPIRE => '20 minutes',
+                Cache::EXPIRE => '12 months',
                 Cache::SLIDING => true,
             ]);
         }
@@ -665,7 +665,7 @@ class BitmapImageRenderer extends UI\Control
                 $imageData = $this->createImageThumbVariants($imagePath);
                 $smallImageSrcSet = $this->prepareSrcSet($imageData);
                 $this->cache->save($key, $smallImageSrcSet, [
-                    Cache::EXPIRE => '20 minutes',
+                    Cache::EXPIRE => '12 months',
                     Cache::SLIDING => true,
                 ]);
             }
@@ -679,7 +679,7 @@ class BitmapImageRenderer extends UI\Control
             $imageData = $this->createImageVariants($imagePath);
             $largeImageSrcSet = $this->prepareSrcSet($imageData);
             $this->cache->save($key2, $largeImageSrcSet, [
-                Cache::EXPIRE => '20 minutes',
+                Cache::EXPIRE => '12 months',
                 Cache::SLIDING => true,
             ]);
         }
