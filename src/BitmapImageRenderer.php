@@ -4,6 +4,7 @@ namespace Optimal\ImageRenderer;
 
 use Nette\Application\UI;
 use Nette\Caching\Cache;
+use Nette\Caching\Storages\FileStorage;
 
 use Optimal\FileManaging\Exception\DirectoryException;
 use Optimal\FileManaging\Exception\FileNotFoundException;
@@ -47,12 +48,14 @@ class BitmapImageRenderer extends UI\Control
     /** @var string */
     protected $defaultSizes = '';
 
-    public function __construct(UI\ITemplateFactory $templateFactory, Cache $cache)
+    public function __construct(UI\ITemplateFactory $templateFactory)
     {
         $this->templateFactory = $templateFactory;
         $this->imageDirectoryCommander = new FileCommander();
         $this->imagesManager = new ImagesManager();
-        $this->cache = $cache;
+
+        $storage = new FileStorage('temp/images');
+        $this->cache = new Cache($storage);
     }
 
     /**
