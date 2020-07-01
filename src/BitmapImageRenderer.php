@@ -518,11 +518,21 @@ class BitmapImageRenderer extends UI\Control
             ]);
         }
 
-        echo $srcSet;
+        if($this->presenter->isAjax()){
+            return $srcSet;
+        } else {
+            echo $srcSet;
+        }
+
     }
 
-    public function renderDefaultThumbSizes(){
-        echo $this->defaultThumbSizes;
+    public function renderDefaultThumbSizes()
+    {
+        if($this->presenter->isAjax()){
+            return $this->defaultThumbSizes;
+        } else {
+            echo $this->defaultThumbSizes;
+        }
     }
 
     /**
@@ -659,11 +669,21 @@ class BitmapImageRenderer extends UI\Control
             ]);
         }
 
-        echo $srcSet;
+        if($this->presenter->isAjax()){
+            return $srcSet;
+        } else {
+            echo $srcSet;
+        }
+
     }
 
-    public function renderDefaultSizes(){
-        echo $this->defaultSizes;
+    public function renderDefaultSizes()
+    {
+        if($this->presenter->isAjax()) {
+            return $this->defaultSizes;
+        } else {
+            echo $this->defaultSizes;
+        }
     }
 
     /**
