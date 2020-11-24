@@ -226,6 +226,7 @@ class BitmapImageRenderer extends UI\Control
 
             $this->imageCacheDirCommander->addDirectory($image->getName(), true);
             $this->imageCacheDirCommander->addDirectory('image_variants', true);
+            $this->imageCacheDirCommander->addDirectory($this->preferredExtension, true);
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->resolutionSizes->getResolutionsSettings() as $resolutionSize) {
@@ -307,8 +308,9 @@ class BitmapImageRenderer extends UI\Control
                 throw new DirectoryException("Images variants cache directory is not defined");
             }
 
-            $this->imageCacheDirCommander->addDirectory('thumbs', true);
             $this->imageCacheDirCommander->addDirectory($image->getName(), true);
+            $this->imageCacheDirCommander->addDirectory('thumbs', true);
+            $this->imageCacheDirCommander->addDirectory($this->preferredExtension, true);
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->thumbResolutionSizes->getResolutionsSettings() as $resolutionSize) {
