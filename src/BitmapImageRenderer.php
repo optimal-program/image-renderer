@@ -47,6 +47,8 @@ class BitmapImageRenderer extends UI\Control
     /** @var string */
     protected $defaultSizes = '';
 
+    protected $preferredExtension = null;
+
     public function __construct(UI\ITemplateFactory $templateFactory, Cache $cache)
     {
         $this->templateFactory = $templateFactory;
@@ -100,6 +102,14 @@ class BitmapImageRenderer extends UI\Control
     public function setDefaultThumbSizes(string $defaultThumbSizes): void
     {
         $this->defaultThumbSizes = $defaultThumbSizes;
+    }
+
+    /**
+     * @param string $preferredExtension
+     */
+    public function setPreferredExtension(string $preferredExtension): void
+    {
+        $this->preferredExtension = $preferredExtension;
     }
 
     protected function lcs2($first, $second)
@@ -156,33 +166,27 @@ class BitmapImageRenderer extends UI\Control
      * @param string $destinationPath
      * @param string $newName
      * @param string $extension
-     * @param int $width
-     * @param int $height
-     * @return ImageFileResource
-     * @throws FileNotFoundException
-     * @throws \ImagickException
-     * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
-     * @throws \Optimal\FileManaging\Exception\FileException
-     * @throws \Optimal\FileManaging\Exception\GDException
+     * @param int|null $width
+     * @param int|null $height
+     * @return mixed
      */
-    protected function createImageSize(ImageFileResource $image, string $destinationPath, string $newName, string $extension, int $width = 0, int $height = 0)
+    protected function createImageSize(ImageFileResource $image, string $destinationPath, string $newName, string $extension, ?int $width = null, ?int $height = null)
     {
 
         if (!$this->imageCacheDirCommander->fileExists($newName, $extension)) {
+
             $this->imagesManager->setOutputDirectory($destinationPath);
 
             $imageManageResource = $this->imagesManager->loadImageManageResource($image->getName(), $image->getExtension());
 
-            $imageManageResource->resize($width, $height);
+            $imageManageResource->resize($width ? $width : 0, $height ? $height : 0);
             $imageManageResource->getSourceImageResource()->setNewName($newName);
             $imageManageResource->save(null, $extension);
 
-            $thumbResource = $imageManageResource->getOutputImageResource();
+            return $imageManageResource->getOutputImageResource();
 
-            return $thumbResource;
         } else {
-            $thumbResource = $this->imageCacheDirCommander->getImage($newName, $extension);
-            return $thumbResource;
+            return $this->imageCacheDirCommander->getImage($newName, $extension);
         }
 
     }
@@ -200,6 +204,7 @@ class BitmapImageRenderer extends UI\Control
      */
     public function createImageVariants(string $imagePath)
     {
+
         $image = new ImageFileResource($imagePath);
         $this->imageDirectoryCommander->setPath($image->getFileDirectoryPath());
 
@@ -221,6 +226,7 @@ class BitmapImageRenderer extends UI\Control
 
             $this->imageCacheDirCommander->addDirectory($image->getName(), true);
             $this->imageCacheDirCommander->addDirectory('image_variants', true);
+            $this->imageCacheDirCommander->addDirectory($this->preferredExtension, true);
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->resolutionSizes->getResolutionsSettings() as $resolutionSize) {
@@ -236,13 +242,22 @@ class BitmapImageRenderer extends UI\Control
                     continue;
                 }
 
-                $newName = $imageName . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
-                $extension = $resolutionSize->getExtension() == "default" ? $image->getExtension() : $resolutionSize->getExtension();
+                foreach ($resolutionSize->getExtensions() as $extension) {
 
-                /** @var ImageFileResource $imageVariant */
-                $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
+                    if($extension == "default"){
+                        $extension = $image->getExtension();
+                    }
 
-                array_push($imageVariants, $imageVariant);
+                    if($extension == $this->preferredExtension) {
+                        $newName = $imageName . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
+
+                        /** @var ImageFileResource $imageVariant */
+                        $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
+                        array_push($imageVariants, $imageVariant);
+                    }
+
+                }
+
             }
 
             if(empty($imageVariants)){
@@ -293,8 +308,9 @@ class BitmapImageRenderer extends UI\Control
                 throw new DirectoryException("Images variants cache directory is not defined");
             }
 
-            $this->imageCacheDirCommander->addDirectory('thumbs', true);
             $this->imageCacheDirCommander->addDirectory($image->getName(), true);
+            $this->imageCacheDirCommander->addDirectory('thumbs', true);
+            $this->imageCacheDirCommander->addDirectory($this->preferredExtension, true);
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->thumbResolutionSizes->getResolutionsSettings() as $resolutionSize) {
@@ -310,13 +326,23 @@ class BitmapImageRenderer extends UI\Control
                     continue;
                 }
 
-                $newName = $imageName . '-thumb' . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
-                $extension = $resolutionSize->getExtension() == "default" ? $image->getExtension() : $resolutionSize->getExtension();
+                foreach ($resolutionSize->getExtensions() as $extension) {
 
-                /** @var ImageFileResource $imageVariant */
-                $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
+                    if($extension == "default"){
+                        $extension = $image->getExtension();
+                    }
 
-                array_push($imageThumbsVariants, $imageVariant);
+                    if ($extension == $this->preferredExtension) {
+
+                        $newName = $imageName . '-thumb' . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
+
+                        /** @var ImageFileResource $imageVariant */
+                        $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
+
+                        array_push($imageThumbsVariants, $imageVariant);
+                    }
+                }
+
             }
 
             if(empty($imageThumbsVariants)){
@@ -484,7 +510,7 @@ class BitmapImageRenderer extends UI\Control
 
         [$lazyLoad, $devicesSizes] = $this->checkThumbDefaultParams($lazyLoad, $devicesSizes);
 
-        $key = md5($imageThumbPath.$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
+        $key = md5($imageThumbPath.$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
 
         $imgTag = $this->cache->load($key);
         if(!$imgTag){
@@ -502,10 +528,16 @@ class BitmapImageRenderer extends UI\Control
     /**
      * @param string $imageThumbPath
      * @throws \ImagickException
+     * @throws \Exception
      */
     public function renderImageThumbSrcSet(string $imageThumbPath)
     {
-        $key = md5($imageThumbPath);
+
+        if(!$this->preferredExtension){
+            throw new \Exception('Preferred image extension is required');
+        }
+
+        $key = md5($imageThumbPath.$this->preferredExtension);
 
         $srcSet = $this->cache->load($key);
         if(!$srcSet) {
@@ -537,55 +569,6 @@ class BitmapImageRenderer extends UI\Control
 
     /**
      * @param string $imageThumbPath
-     * @param string $imagePath
-     * @param string $alt
-     * @param string $lightboxGroup
-     * @param bool|null $lazyLoad
-     * @param string $devicesSizes
-     * @param string|null $caption
-     * @param array $attributes
-     * @return string|null
-     * @throws \ImagickException
-     */
-    public function renderImageThumbWithLightbox(string $imageThumbPath, string $imagePath, string $alt, string $lightboxGroup = 'example-set', ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
-    {
-        $this->template->imgTag = $imgTag = $this->prepareImageThumb($imageThumbPath, $alt, $lazyLoad, $devicesSizes, $attributes);
-        $this->template->caption = $caption;
-
-        if ($this->resolutionSizes == null) {
-            throw new \Exception('No large image resolutions defined');
-        }
-
-        [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
-
-        $key2 = md5($imageThumbPath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes)).$lightboxGroup;
-
-        $largeImageSrcSet = $this->cache->load($key2);
-        if (!$largeImageSrcSet) {
-            $imageData = $this->createImageVariants($imagePath);
-            $largeImageSrcSet = $this->prepareSrcSet($imageData);
-            $this->cache->save($key2, $largeImageSrcSet, [
-                Cache::EXPIRE => '12 months',
-                Cache::SLIDING => true,
-            ]);
-        }
-
-        $this->template->caption = $caption;
-
-        $this->template->lightbox = true;
-        $this->template->lightboxGroup = $lightboxGroup;
-        $this->template->linkSrcSet = $largeImageSrcSet;
-
-        if($this->presenter->isAjax()){
-            return (string) $this->template;
-        } else {
-            $this->template->render();
-            return null;
-        }
-    }
-
-    /**
-     * @param string $imageThumbPath
      * @param string $alt
      * @param bool|null $lazyLoad
      * @param string $devicesSizes
@@ -596,20 +579,20 @@ class BitmapImageRenderer extends UI\Control
      */
     public function renderImageThumb(string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
     {
+        if(!$this->preferredExtension){
+            throw new \Exception('Preferred image extension is required');
+        }
+
         $this->template->setFile(__DIR__ . '/templates/image.latte');
-
         $this->template->imgTag = $imgTag = $this->prepareImageThumb($imageThumbPath, $alt, $lazyLoad, $devicesSizes, $attributes);
-
-        $this->template->lightbox = false;
-        $this->template->linkSrcSet = null;
         $this->template->caption = $caption;
 
         if($this->presenter->isAjax()){
             return (string) $this->template;
         } else {
             $this->template->render();
-            return null;
         }
+
     }
 
     /**
@@ -634,7 +617,7 @@ class BitmapImageRenderer extends UI\Control
 
         [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
 
-        $key = md5($imagePath.$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes));
+        $key = md5($imagePath.$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
 
         $imgTag  = $this->cache->load($key);
         if(!$imgTag){
@@ -653,10 +636,15 @@ class BitmapImageRenderer extends UI\Control
      * @param string $imagePath
      * @return string
      * @throws \ImagickException
+     * @throws \Exception
      */
     public function renderImageSrcSet(string $imagePath)
     {
-        $key = md5($imagePath);
+        if(!$this->preferredExtension){
+            throw new \Exception('Preferred image extension is required');
+        }
+
+        $key = md5($imagePath.$this->preferredExtension);
 
         $srcSet = $this->cache->load($key);
         if(!$srcSet) {
@@ -690,75 +678,19 @@ class BitmapImageRenderer extends UI\Control
      * @param string $imagePath
      * @param string $alt
      * @param bool|null $lazyLoad
-     * @param string|null $lightboxGroup
      * @param string $devicesSizes
      * @param string|null $caption
      * @param array $attributes
      * @return string|null
      * @throws \ImagickException
-     */
-    public function renderImageWithLightbox(string $imagePath, string $alt, ?bool $lazyLoad = null, ?string $lightboxGroup = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
-    {
-        $this->template->setFile(__DIR__ . '/templates/image.latte');
-        $this->template->imgTag = $imgTag = $this->prepareImage($imagePath, $alt, $lazyLoad, $devicesSizes, $attributes);
-
-        [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
-
-        $smallImageSrcSet = null;
-        if($this->thumbResolutionSizes){
-
-            $key = md5($imagePath . $this->serializeResolutionSizes($this->thumbResolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes)).$lightboxGroup;
-
-            $smallImageSrcSet = $this->cache->load($key);
-            if (!$smallImageSrcSet) {
-                $imageData = $this->createImageThumbVariants($imagePath);
-                $smallImageSrcSet = $this->prepareSrcSet($imageData);
-                $this->cache->save($key, $smallImageSrcSet, [
-                    Cache::EXPIRE => '12 months',
-                    Cache::SLIDING => true,
-                ]);
-            }
-
-        }
-
-        $key2 = md5($imagePath . $this->serializeResolutionSizes($this->resolutionSizes) . $alt . $devicesSizes . $lazyLoad . join(';', $attributes)).$lightboxGroup;
-
-        $largeImageSrcSet = $this->cache->load($key2);
-        if (!$largeImageSrcSet) {
-            $imageData = $this->createImageVariants($imagePath);
-            $largeImageSrcSet = $this->prepareSrcSet($imageData);
-            $this->cache->save($key2, $largeImageSrcSet, [
-                Cache::EXPIRE => '12 months',
-                Cache::SLIDING => true,
-            ]);
-        }
-
-        $this->template->lightbox = true;
-        $this->template->lightboxGroup = $lightboxGroup;
-        $this->template->linkSrcSet = $smallImageSrcSet ? $smallImageSrcSet : $largeImageSrcSet;
-
-        $this->template->caption = $caption;
-
-        if($this->presenter->isAjax()){
-            return (string) $this->template;
-        } else {
-            $this->template->render();
-            return null;
-        }
-    }
-
-    /**
-     * @param string $imagePath
-     * @param string $alt
-     * @param bool|null $lazyLoad
-     * @param string $devicesSizes
-     * @param string|null $caption
-     * @param array $attributes
-     * @return string|null
-     * @throws \ImagickException
+     * @throws \Exception
      */
     public function renderImage(string $imagePath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
     {
+        if(!$this->preferredExtension){
+            throw new \Exception('Preferred image extension is required');
+        }
+
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $imgTag = $this->prepareImage($imagePath, $alt, $lazyLoad, $devicesSizes, $attributes);
 
