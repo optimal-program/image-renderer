@@ -9,8 +9,8 @@ use Optimal\FileManaging\Exception\DirectoryException;
 use Optimal\FileManaging\Exception\FileNotFoundException;
 use Optimal\FileManaging\FileCommander;
 use Optimal\FileManaging\ImagesManager;
-use Optimal\FileManaging\resources\ImageFileResource;
 
+use Optimal\FileManaging\resources\BitmapImageFileResource;
 use Optimal\FileManaging\Utils\ImageResolutionSettings;
 use Optimal\FileManaging\Utils\ImageResolutionsSettings;
 
@@ -162,7 +162,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param ImageFileResource $image
+     * @param BitmapImageFileResource $image
      * @param string $destinationPath
      * @param string $newName
      * @param string $extension
@@ -170,7 +170,7 @@ class BitmapImageRenderer extends UI\Control
      * @param int|null $height
      * @return mixed
      */
-    protected function createImageSize(ImageFileResource $image, string $destinationPath, string $newName, string $extension, ?int $width = null, ?int $height = null)
+    protected function createImageSize(BitmapImageFileResource $image, string $destinationPath, string $newName, string $extension, ?int $width = null, ?int $height = null)
     {
 
         if (!$this->imageCacheDirCommander->fileExists($newName, $extension)) {
@@ -205,7 +205,7 @@ class BitmapImageRenderer extends UI\Control
     public function createImageVariants(string $imagePath)
     {
 
-        $image = new ImageFileResource($imagePath);
+        $image = new BitmapImageFileResource($imagePath);
         $this->imageDirectoryCommander->setPath($image->getFileDirectoryPath());
 
         $imageVariants = [];
@@ -251,7 +251,7 @@ class BitmapImageRenderer extends UI\Control
                     if($extension == $this->preferredExtension) {
                         $newName = $imageName . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
 
-                        /** @var ImageFileResource $imageVariant */
+                        /** @var BitmapImageFileResource $imageVariant */
                         $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
                         array_push($imageVariants, $imageVariant);
                     }
@@ -289,7 +289,7 @@ class BitmapImageRenderer extends UI\Control
     public function createImageThumbVariants(string $imageThumbPath)
     {
 
-        $image = new ImageFileResource($imageThumbPath);
+        $image = new BitmapImageFileResource($imageThumbPath);
         $this->imageDirectoryCommander->setPath($image->getFileDirectoryPath());
 
         $imageThumbsVariants = [];
@@ -336,7 +336,7 @@ class BitmapImageRenderer extends UI\Control
 
                         $newName = $imageName . '-thumb' . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
 
-                        /** @var ImageFileResource $imageVariant */
+                        /** @var BitmapImageFileResource $imageVariant */
                         $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
 
                         array_push($imageThumbsVariants, $imageVariant);
@@ -412,7 +412,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param ImageFileResource[] $imageData
+     * @param BitmapImageFileResource[] $imageData
      * @param string $alt
      * @param string $devicesSizes
      * @param bool|null $lazyLoad
