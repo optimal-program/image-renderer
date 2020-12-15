@@ -574,7 +574,6 @@ class BitmapImageRenderer extends UI\Control
      * @param string $devicesSizes
      * @param string|null $caption
      * @param array $attributes
-     * @return string|null
      * @throws \ImagickException
      */
     public function renderImageThumb(string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
@@ -587,12 +586,24 @@ class BitmapImageRenderer extends UI\Control
         $this->template->imgTag = $imgTag = $this->prepareImageThumb($imageThumbPath, $alt, $lazyLoad, $devicesSizes, $attributes);
         $this->template->caption = $caption;
 
-        if($this->presenter->isAjax()){
-            return (string) $this->template;
-        } else {
-            $this->template->render();
-        }
+        $this->template->render();
+    }
 
+    /**
+     * @param string $imageThumbPath
+     * @param string $alt
+     * @param bool|null $lazyLoad
+     * @param string $devicesSizes
+     * @param string|null $caption
+     * @param array $attributes
+     * @return bool
+     * @throws \ImagickException
+     */
+    public function renderImageThumbAsString(string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
+    {
+        ob_start();
+        $this->renderImageThumb($imageThumbPath, $alt, $lazyLoad, $devicesSizes,$caption, $attributes);
+        return ob_end_flush();
     }
 
     /**
@@ -681,7 +692,6 @@ class BitmapImageRenderer extends UI\Control
      * @param string $devicesSizes
      * @param string|null $caption
      * @param array $attributes
-     * @return string|null
      * @throws \ImagickException
      * @throws \Exception
      */
@@ -697,12 +707,24 @@ class BitmapImageRenderer extends UI\Control
         $this->template->lightbox = false;
         $this->template->caption = $caption;
 
-        if($this->presenter->isAjax()){
-            return (string) $this->template;
-        } else {
-            $this->template->render();
-            return null;
-        }
+        $this->template->render();
+    }
+
+    /**
+     * @param string $imagePath
+     * @param string $alt
+     * @param bool|null $lazyLoad
+     * @param string $devicesSizes
+     * @param string|null $caption
+     * @param array $attributes
+     * @return string
+     * @throws \ImagickException
+     */
+    public function renderImageAsString(string $imagePath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = []):string
+    {
+        ob_start();
+        $this->renderImage($imagePath, $alt, $lazyLoad, $devicesSizes, $caption, $attributes);
+        return ob_end_flush();
     }
 
 }
