@@ -532,7 +532,6 @@ class BitmapImageRenderer extends UI\Control
      */
     public function renderImageThumbSrcSet(string $imageThumbPath)
     {
-
         if(!$this->preferredExtension){
             throw new \Exception('Preferred image extension is required');
         }
@@ -550,21 +549,32 @@ class BitmapImageRenderer extends UI\Control
             ]);
         }
 
-        if($this->presenter->isAjax()){
-            return $srcSet;
-        } else {
-            echo $srcSet;
-        }
+        echo $srcSet;
+    }
 
+    /**
+     * @param string $imageThumbPath
+     * @return bool
+     * @throws \ImagickException
+     */
+    public function getImageThumbSrcSet(string $imageThumbPath)
+    {
+        ob_start();
+        $this->renderImageThumbSrcSet($imageThumbPath);
+        return ob_end_flush();
     }
 
     public function renderDefaultThumbSizes()
     {
-        if($this->presenter->isAjax()){
-            return $this->defaultThumbSizes;
-        } else {
-            echo $this->defaultThumbSizes;
-        }
+        echo $this->defaultThumbSizes;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDefaultThumbSizes()
+    {
+        return $this->defaultThumbSizes;
     }
 
     /**
@@ -668,21 +678,29 @@ class BitmapImageRenderer extends UI\Control
             ]);
         }
 
-        if($this->presenter->isAjax()){
-            return $srcSet;
-        } else {
-            echo $srcSet;
-        }
+        echo $srcSet;
+    }
 
+    /**
+     * @param string $imagePath
+     * @return bool
+     * @throws \ImagickException
+     */
+    public function getImageSrcSet(string $imagePath)
+    {
+        ob_start();
+        $this->renderImageSrcSet($imagePath);
+        return ob_end_flush();
     }
 
     public function renderDefaultSizes()
     {
-        if($this->presenter->isAjax()) {
-            return $this->defaultSizes;
-        } else {
-            echo $this->defaultSizes;
-        }
+        echo $this->defaultSizes;
+    }
+
+    public function getDefaultSizes()
+    {
+        return $this->defaultSizes;
     }
 
     /**
