@@ -511,7 +511,7 @@ class BitmapImageRenderer extends UI\Control
 
         [$lazyLoad, $devicesSizes] = $this->checkThumbDefaultParams($lazyLoad, $devicesSizes);
 
-        $key = md5($imageThumbPath.filemtime($imageThumbPath).$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
+        $key = md5($imageThumbPath.filectime($imageThumbPath).$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
 
         $imgTag = $this->cache->load($key);
         if(!$imgTag){
@@ -537,7 +537,7 @@ class BitmapImageRenderer extends UI\Control
             throw new \Exception('Preferred image extension is required');
         }
 
-        $key = md5($imageThumbPath.filemtime($imageThumbPath).$this->preferredExtension);
+        $key = md5($imageThumbPath.filectime($imageThumbPath).$this->preferredExtension);
 
         $srcSet = $this->cache->load($key);
         if(!$srcSet) {
@@ -639,7 +639,7 @@ class BitmapImageRenderer extends UI\Control
 
         [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
 
-        $key = md5($imagePath.filemtime($imagePath).$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
+        $key = md5($imagePath.filectime($imagePath).$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
 
         $imgTag  = $this->cache->load($key);
         if(!$imgTag){
@@ -666,7 +666,7 @@ class BitmapImageRenderer extends UI\Control
             throw new \Exception('Preferred image extension is required');
         }
 
-        $key = md5($imagePath.filemtime($imagePath).$this->preferredExtension);
+        $key = md5($imagePath.filectime($imagePath).$this->preferredExtension);
 
         $srcSet = $this->cache->load($key);
         if(!$srcSet) {
