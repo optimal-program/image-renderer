@@ -153,6 +153,7 @@ class BitmapImageRenderer extends UI\Control
 
         if($this->imageCacheDirCommander->directoryExists($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart)){
             $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart);
+            $this->imageCacheDirCommander->clearDir();
         } else {
             $pathParts = explode("/", $imageDirWithoutCommonPart);
             foreach ($pathParts as $pathPart) {
@@ -510,7 +511,7 @@ class BitmapImageRenderer extends UI\Control
 
         [$lazyLoad, $devicesSizes] = $this->checkThumbDefaultParams($lazyLoad, $devicesSizes);
 
-        $key = md5($imageThumbPath.$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
+        $key = md5($imageThumbPath.filemtime($imageThumbPath).$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
 
         $imgTag = $this->cache->load($key);
         if(!$imgTag){
@@ -536,7 +537,7 @@ class BitmapImageRenderer extends UI\Control
             throw new \Exception('Preferred image extension is required');
         }
 
-        $key = md5($imageThumbPath.$this->preferredExtension);
+        $key = md5($imageThumbPath.filemtime($imageThumbPath).$this->preferredExtension);
 
         $srcSet = $this->cache->load($key);
         if(!$srcSet) {
@@ -638,7 +639,7 @@ class BitmapImageRenderer extends UI\Control
 
         [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
 
-        $key = md5($imagePath.$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
+        $key = md5($imagePath.filemtime($imagePath).$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
 
         $imgTag  = $this->cache->load($key);
         if(!$imgTag){
@@ -665,7 +666,7 @@ class BitmapImageRenderer extends UI\Control
             throw new \Exception('Preferred image extension is required');
         }
 
-        $key = md5($imagePath.$this->preferredExtension);
+        $key = md5($imagePath.filemtime($imagePath).$this->preferredExtension);
 
         $srcSet = $this->cache->load($key);
         if(!$srcSet) {
