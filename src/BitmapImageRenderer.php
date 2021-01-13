@@ -526,7 +526,7 @@ class BitmapImageRenderer extends UI\Control
 
         $fileHash = sha1(file_get_contents($imageThumbPath));
         $lastTime = filectime($imageThumbPath);
-        $fileChanged = !$data ? true : $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
+        $fileChanged = !$data ? false : $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
 
         if(!$data || $fileChanged){
 
@@ -566,7 +566,7 @@ class BitmapImageRenderer extends UI\Control
 
         $fileHash = sha1(file_get_contents($imageThumbPath));
         $lastTime = filectime($imageThumbPath);
-        $fileChanged = !$data ? true : $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
+        $fileChanged = !$data ? false : $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
 
         if(!$data || $fileChanged) {
             $imageData = $this->createImageThumbVariants($imageThumbPath, $fileChanged);
@@ -679,7 +679,7 @@ class BitmapImageRenderer extends UI\Control
 
         $fileHash = sha1(file_get_contents($imagePath));
         $lastTime = filectime($imagePath);
-        $fileChanged = !$data ? true : $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
+        $fileChanged = !$data ? false : $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
 
         if(!$data || $fileChanged){
 
@@ -718,7 +718,7 @@ class BitmapImageRenderer extends UI\Control
 
         $fileHash = sha1(file_get_contents($imagePath));
         $lastTime = filectime($imagePath);
-        $fileChanged = !$data ? true : $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
+        $fileChanged = !$data ? false : $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
 
         if(!$data || $fileChanged) {
 
