@@ -23,7 +23,13 @@ class VectorImageRenderer extends UI\Control
         return trim(preg_replace('/\s\s+/', ' ', $template));
     }
 
-    public function renderSvgImg(string $svgPath, string $alt, array $attributes = [])
+    /**
+     * @param string $svgPath
+     * @param string $alt
+     * @param array $attributes
+     * @return string|null
+     */
+    public function render(string $svgPath, string $alt, array $attributes = [])
     {
         $this->template->setFile(__DIR__ . '/templates/imgtag.latte');
 
@@ -52,7 +58,24 @@ class VectorImageRenderer extends UI\Control
         }
     }
 
-    public function renderInlineSvg(string $svgPath)
+    /**
+     * @param string $svgPath
+     * @param string $alt
+     * @param array $attributes
+     * @return bool
+     */
+    public function renderAsString(string $svgPath, string $alt, array $attributes = [])
+    {
+        ob_start();
+        $this->render($svgPath, $alt, $attributes);
+        return ob_end_flush();
+    }
+
+    /**
+     * @param string $svgPath
+     * @return string|null
+     */
+    public function renderInline(string $svgPath)
     {
         $this->template->setFile(__DIR__ . '/templates/inlineSvg.latte');
 
@@ -64,6 +87,17 @@ class VectorImageRenderer extends UI\Control
             $this->template->render();
             return null;
         }
+    }
+
+    /**
+     * @param string $svgPath
+     * @return bool
+     */
+    public function renderInlineAsString(string $svgPath)
+    {
+        ob_start();
+        $this->renderInline($svgPath);
+        return ob_end_flush();
     }
 
 }
