@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Optimal\ImageRenderer;
 
@@ -152,9 +152,7 @@ class BitmapImageRenderer extends UI\Control
         $imageDirWithoutCommonPart = str_replace($commonPart, "", $imagePath);
 
         if($this->imageCacheDirCommander->directoryExists($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart)){
-            dumpe($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart);
             $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getAbsolutePath()."/".$imageDirWithoutCommonPart);
-            $this->imageCacheDirCommander->clearDir();
         } else {
             $pathParts = explode("/", $imageDirWithoutCommonPart);
             foreach ($pathParts as $pathPart) {
@@ -195,6 +193,7 @@ class BitmapImageRenderer extends UI\Control
 
     /**
      * @param string $imagePath
+     * @param bool $fileIsChanged
      * @return array
      * @throws DirectoryException
      * @throws FileNotFoundException
@@ -204,7 +203,7 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Optimal\FileManaging\Exception\GDException
      */
-    public function createImageVariants(string $imagePath)
+    public function createImageVariants(string $imagePath, bool $fileIsChanged)
     {
 
         $image = new BitmapImageFileResource($imagePath);
@@ -228,6 +227,11 @@ class BitmapImageRenderer extends UI\Control
 
             $this->imageCacheDirCommander->addDirectory($image->getName(), true);
             $this->imageCacheDirCommander->addDirectory('image_variants', true);
+
+            if($fileIsChanged){
+                $this->imageCacheDirCommander->clearDir();
+            }
+
             $this->imageCacheDirCommander->addDirectory($this->preferredExtension, true);
 
             /** @var ImageResolutionSettings $resolutionSize */
@@ -279,6 +283,7 @@ class BitmapImageRenderer extends UI\Control
 
     /**
      * @param string $imageThumbPath
+     * @param bool $fileIsChanged
      * @return array
      * @throws DirectoryException
      * @throws FileNotFoundException
@@ -288,9 +293,8 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Optimal\FileManaging\Exception\GDException
      */
-    public function createImageThumbVariants(string $imageThumbPath)
+    public function createImageThumbVariants(string $imageThumbPath, bool $fileIsChanged)
     {
-
         $image = new BitmapImageFileResource($imageThumbPath);
         $this->imageDirectoryCommander->setPath($image->getFileDirectoryPath());
 
@@ -312,6 +316,11 @@ class BitmapImageRenderer extends UI\Control
 
             $this->imageCacheDirCommander->addDirectory($image->getName(), true);
             $this->imageCacheDirCommander->addDirectory('thumbs', true);
+
+            if($fileIsChanged){
+                $this->imageCacheDirCommander->clearDir();
+            }
+
             $this->imageCacheDirCommander->addDirectory($this->preferredExtension, true);
 
             /** @var ImageResolutionSettings $resolutionSize */
@@ -512,19 +521,32 @@ class BitmapImageRenderer extends UI\Control
 
         [$lazyLoad, $devicesSizes] = $this->checkThumbDefaultParams($lazyLoad, $devicesSizes);
 
-        $key = md5($imageThumbPath.file_get_contents($imageThumbPath).$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
+        $key = md5($imageThumbPath.$this->serializeResolutionSizes($this->thumbResolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
+        $data = $this->cache->load($key);
 
-        $imgTag = $this->cache->load($key);
-        if(!$imgTag){
-            $imageData = $this->createImageThumbVariants($imageThumbPath);
+        $fileHash = sha1(file_get_contents($imageThumbPath));
+        $lastTime = filectime($imageThumbPath);
+        $fileChanged = $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
+
+        if(!$data || $fileChanged){
+
+            $imageData = $this->createImageThumbVariants($imageThumbPath, $fileChanged);
             $imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
-            $this->cache->save($key, $imgTag, [
+
+            $data = [
+                'img' => $imgTag,
+                'lastHash' => $fileHash,
+                'lastModifiedTime' => $lastTime
+            ];
+
+            $this->cache->save($key, $data, [
                 Cache::EXPIRE => '12 months',
                 Cache::SLIDING => true,
             ]);
+
         }
 
-        return $imgTag;
+        return $data['img'];
     }
 
     /**
@@ -540,18 +562,29 @@ class BitmapImageRenderer extends UI\Control
 
         $key = md5($imageThumbPath.file_get_contents($imageThumbPath).$this->preferredExtension);
 
-        $srcSet = $this->cache->load($key);
-        if(!$srcSet) {
-            $imageData = $this->createImageThumbVariants($imageThumbPath);
+        $data = $this->cache->load($key);
+
+        $fileHash = sha1(file_get_contents($imageThumbPath));
+        $lastTime = filectime($imageThumbPath);
+        $fileChanged = $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
+
+        if(!$data || $fileChanged) {
+            $imageData = $this->createImageThumbVariants($imageThumbPath, $fileChanged);
             $srcSet = $this->prepareSrcSet($imageData);
 
-            $this->cache->save($key, $srcSet, [
+            $data = [
+                'srcSet' => $srcSet,
+                'lastHash' => $fileHash,
+                'lastModifiedTime' => $lastTime
+            ];
+
+            $this->cache->save($key, $data, [
                 Cache::EXPIRE => '12 months',
                 Cache::SLIDING => true,
             ]);
         }
 
-        echo $srcSet;
+        echo $data['srcSet'];
     }
 
     /**
@@ -642,17 +675,30 @@ class BitmapImageRenderer extends UI\Control
 
         $key = md5($imagePath.file_get_contents($imagePath).$this->serializeResolutionSizes($this->resolutionSizes).$alt.$devicesSizes.$lazyLoad.join(';',$attributes).$this->preferredExtension);
 
-        $imgTag  = $this->cache->load($key);
-        if(!$imgTag){
-            $imageData = $this->createImageVariants($imagePath);
+        $data  = $this->cache->load($key);
+
+        $fileHash = sha1(file_get_contents($imagePath));
+        $lastTime = filectime($imagePath);
+        $fileChanged = $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
+
+        if(!$data || $fileChanged){
+
+            $imageData = $this->createImageVariants($imagePath, $fileChanged);
             $imgTag = $this->renderImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
-            $this->cache->save($key, $imgTag, [
+
+            $data = [
+                'img' => $imgTag,
+                'lastHash' => $fileHash,
+                'lastModifiedTime' => $lastTime
+            ];
+
+            $this->cache->save($key, $data, [
                 Cache::EXPIRE => '12 months',
                 Cache::SLIDING => true,
             ]);
         }
 
-        return $imgTag;
+        return $data['img'];
     }
 
     /**
@@ -668,19 +714,30 @@ class BitmapImageRenderer extends UI\Control
         }
 
         $key = md5($imagePath.file_get_contents($imagePath).$this->preferredExtension);
+        $data = $this->cache->load($key);
 
-        $srcSet = $this->cache->load($key);
-        if(!$srcSet) {
-            $imageData = $this->createImageVariants($imagePath);
+        $fileHash = sha1(file_get_contents($imagePath));
+        $lastTime = filectime($imagePath);
+        $fileChanged = $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
+
+        if(!$data || $fileChanged) {
+
+            $imageData = $this->createImageVariants($imagePath, $fileChanged);
             $srcSet = $this->prepareSrcSet($imageData);
 
-            $this->cache->save($key, $srcSet, [
+            $data = [
+                'srcSet' => $srcSet,
+                'lastHash' => $fileHash,
+                'lastModifiedTime' => $lastTime
+            ];
+
+            $this->cache->save($key, $data, [
                 Cache::EXPIRE => '12 months',
                 Cache::SLIDING => true,
             ]);
         }
 
-        echo $srcSet;
+        echo $data['srcSet'];
     }
 
     /**
