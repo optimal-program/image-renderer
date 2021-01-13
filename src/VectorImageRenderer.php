@@ -27,7 +27,6 @@ class VectorImageRenderer extends UI\Control
      * @param string $svgPath
      * @param string $alt
      * @param array $attributes
-     * @return string|null
      */
     public function render(string $svgPath, string $alt, array $attributes = [])
     {
@@ -50,12 +49,7 @@ class VectorImageRenderer extends UI\Control
         $this->template->attributes = $attributes;
         $this->template->lazyLoad = false;
 
-        if($this->presenter->isAjax()){
-            return (string) $this->template;
-        } else {
-            $this->template->render();
-            return null;
-        }
+        $this->template->render();
     }
 
     /**
@@ -73,20 +67,12 @@ class VectorImageRenderer extends UI\Control
 
     /**
      * @param string $svgPath
-     * @return string|null
      */
     public function renderInline(string $svgPath)
     {
         $this->template->setFile(__DIR__ . '/templates/inlineSvg.latte');
-
         $this->template->svgContent = file_get_contents($svgPath);
-
-        if($this->presenter->isAjax()){
-            return (string) $this->template;
-        } else {
-            $this->template->render();
-            return null;
-        }
+        $this->template->render();
     }
 
     /**
