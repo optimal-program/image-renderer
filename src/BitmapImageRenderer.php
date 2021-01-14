@@ -589,14 +589,14 @@ class BitmapImageRenderer extends UI\Control
 
     /**
      * @param string $imageThumbPath
-     * @return bool
+     * @return string
      * @throws \ImagickException
      */
     public function getImageThumbSrcSet(string $imageThumbPath)
     {
         ob_start();
         $this->renderImageThumbSrcSet($imageThumbPath);
-        return ob_end_flush();
+        return ob_get_contents();
     }
 
     public function renderDefaultThumbSizes()
@@ -641,14 +641,14 @@ class BitmapImageRenderer extends UI\Control
      * @param string $devicesSizes
      * @param string|null $caption
      * @param array $attributes
-     * @return bool
+     * @return string
      * @throws \ImagickException
      */
     public function renderImageThumbAsString(string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = [])
     {
         ob_start();
         $this->renderImageThumb($imageThumbPath, $alt, $lazyLoad, $devicesSizes,$caption, $attributes);
-        return ob_end_flush();
+        return ob_get_contents();
     }
 
     /**
@@ -742,14 +742,14 @@ class BitmapImageRenderer extends UI\Control
 
     /**
      * @param string $imagePath
-     * @return bool
+     * @return string
      * @throws \ImagickException
      */
     public function getImageSrcSet(string $imagePath)
     {
         ob_start();
         $this->renderImageSrcSet($imagePath);
-        return ob_end_flush();
+        return ob_get_contents();
     }
 
     public function renderDefaultSizes()
@@ -801,7 +801,7 @@ class BitmapImageRenderer extends UI\Control
     {
         ob_start();
         $this->renderImage($imagePath, $alt, $lazyLoad, $devicesSizes, $caption, $attributes);
-        return ob_end_flush();
+        return ob_get_contents();
     }
 
 }
