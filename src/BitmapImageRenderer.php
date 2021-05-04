@@ -51,7 +51,7 @@ class BitmapImageRenderer extends UI\Control
     /** @var string */
     protected $preferredExtension;
 
-    public function __construct(UI\TemplateFactory $templateFactory, Cache $cache)
+    public function __construct(UI\ITemplateFactory $templateFactory, Cache $cache)
     {
         $this->templateFactory = $templateFactory;
         $this->imageDirectoryCommander = new FileCommander();
