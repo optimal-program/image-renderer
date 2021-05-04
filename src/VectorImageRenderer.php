@@ -38,7 +38,7 @@ class VectorImageRenderer extends UI\Control
 
         $classes = [];
 
-        if(isset($attributes["class"])){
+        if (isset($attributes["class"])) {
             array_push($classes, $attributes["class"]);
             unset($attributes["class"]);
         }
