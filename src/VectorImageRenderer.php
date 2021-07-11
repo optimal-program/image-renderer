@@ -7,10 +7,10 @@ use Nette\Application\UI;
 class VectorImageRenderer extends UI\Control
 {
 
-    /** @var UI\ITemplateFactory */
+    /** @var UI\TemplateFactory */
     private $templateFactory;
 
-    public function __construct(UI\ITemplateFactory $templateFactory)
+    public function __construct(UI\TemplateFactory $templateFactory)
     {
         $this->templateFactory = $templateFactory;
     }
@@ -39,7 +39,7 @@ class VectorImageRenderer extends UI\Control
         $classes = [];
 
         if (isset($attributes["class"])) {
-            array_push($classes, $attributes["class"]);
+            $classes[] = $attributes["class"];
             unset($attributes["class"]);
         }
 
@@ -56,9 +56,9 @@ class VectorImageRenderer extends UI\Control
      * @param string $svgPath
      * @param string $alt
      * @param array $attributes
-     * @return bool
+     * @return string
      */
-    public function renderAsString(string $svgPath, string $alt, array $attributes = [])
+    public function renderAsString(string $svgPath, string $alt, array $attributes = []):string
     {
         ob_start();
         $this->render($svgPath, $alt, $attributes);
@@ -68,7 +68,7 @@ class VectorImageRenderer extends UI\Control
     /**
      * @param string $svgPath
      */
-    public function renderInline(string $svgPath)
+    public function renderInline(string $svgPath):void
     {
         $this->template->setFile(__DIR__ . '/templates/inlineSvg.latte');
         $this->template->svgContent = file_get_contents($svgPath);
@@ -77,9 +77,9 @@ class VectorImageRenderer extends UI\Control
 
     /**
      * @param string $svgPath
-     * @return bool
+     * @return string
      */
-    public function renderInlineAsString(string $svgPath)
+    public function renderInlineAsString(string $svgPath):string
     {
         ob_start();
         $this->renderInline($svgPath);
