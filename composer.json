@@ -12,7 +12,7 @@
     "php": ">=7.2",
     "nette/application": "^3.0",
     "nette/caching": "^3.0",
-    "optimal/file-managing": "1.1.1"
+    "optimal/file-managing": "1.1.2"
   },
   "authors": [
     {
