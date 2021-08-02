@@ -19,7 +19,7 @@ use Optimal\FileManaging\Utils\ImageResolutionsSettings;
 class BitmapImageRenderer extends UI\Control
 {
 
-    /** @var UI\TemplateFactory */
+    /** @var UI\ITemplateFactory */
     private $templateFactory;
 
     /** @var FileCommander */
@@ -58,7 +58,7 @@ class BitmapImageRenderer extends UI\Control
     /** @var string */
     protected $defaultSizes = '';
 
-    public function __construct(UI\TemplateFactory $templateFactory, Cache $cache)
+    public function __construct(UI\ITemplateFactory $templateFactory, Cache $cache)
     {
         $this->templateFactory = $templateFactory;
         $this->imageDirectoryCommander = new FileCommander();
@@ -71,10 +71,15 @@ class BitmapImageRenderer extends UI\Control
      */
     public static function browserSupportsWebp(): bool
     {
-        if (!isset($_SERVER['HTTP_ACCEPT'])) {
-            return false;
+
+        if (!isset($_COOKIE['webp-support'])) {
+            $isWebpSupported = strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false;
+            setcookie('webp-support', (string) $isWebpSupported, time() + 60 * 60 * 24);
+            return $isWebpSupported;
         }
-        return strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false;
+
+        return (bool) $_COOKIE['webp-support'];
+
     }
 
     /**
@@ -132,7 +137,7 @@ class BitmapImageRenderer extends UI\Control
      * @param $second
      * @return string
      */
-    protected function lcs2($first, $second):string
+    protected function lcs2($first, $second): string
     {
         $len1 = strlen($first);
         $len2 = strlen($second);
@@ -218,7 +223,6 @@ class BitmapImageRenderer extends UI\Control
         return $this->imageCacheDirCommander->getImage($newName, $extension);
     }
 
-    
 
     /**
      * @param string $imagePath
@@ -261,7 +265,7 @@ class BitmapImageRenderer extends UI\Control
                 $this->imageCacheDirCommander->clearDir();
             }
 
-            $this->imageCacheDirCommander->addDirectory($this->preferredExtension, true);
+            $extensionDirCreated = false;
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->resolutionSizes->getResolutionsSettings() as $resolutionSize) {
@@ -295,11 +299,18 @@ class BitmapImageRenderer extends UI\Control
                         continue;
                     }
 
+                    if (!$extensionDirCreated) {
+                        $this->imageCacheDirCommander->addDirectory($extension, true);
+                        $extensionDirCreated = true;
+                    }
+
                     $newName = $imageName . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
 
                     /** @var BitmapImageFileResource $imageVariant */
                     $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
                     $imageVariants[] = $imageVariant;
+
+                    break;
                 }
 
             }
@@ -363,15 +374,19 @@ class BitmapImageRenderer extends UI\Control
             $extensionMap = $this->extensionsMap[$image->getExtension()];
             $useWebP = $extensionMap[0] === FilesTypes::IMAGES_WEBP[0];
 
-            if($useWebP && self::browserSupportsWebp()) {
-                $this->imageCacheDirCommander->addDirectory($extensionMap[0], true);
-            } else if($useWebP && !self::browserSupportsWebp()){
-                $this->imageCacheDirCommander->addDirectory($extensionMap[1], true);
-            } else {
+            if ($useWebP && self::browserSupportsWebp()) {
                 $this->imageCacheDirCommander->addDirectory($extensionMap[0], true);
             }
+            else {
+                if ($useWebP && !self::browserSupportsWebp()) {
+                    $this->imageCacheDirCommander->addDirectory($extensionMap[1], true);
+                }
+                else {
+                    $this->imageCacheDirCommander->addDirectory($extensionMap[0], true);
+                }
+            }
 
-            $this->imageCacheDirCommander->addDirectory($this->preferredExtension, true);
+            $extensionDirCreated = false;
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->thumbResolutionSizes->getResolutionsSettings() as $resolutionSize) {
@@ -401,6 +416,11 @@ class BitmapImageRenderer extends UI\Control
 
                     if ($extension === FilesTypes::IMAGES_WEBP[0] && !self::browserSupportsWebp()) {
                         continue;
+                    }
+
+                    if (!$extensionDirCreated) {
+                        $this->imageCacheDirCommander->addDirectory($extension, true);
+                        $extensionDirCreated = true;
                     }
 
                     $newName = $imageName . '-thumb' . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');

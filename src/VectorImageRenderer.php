@@ -7,10 +7,10 @@ use Nette\Application\UI;
 class VectorImageRenderer extends UI\Control
 {
 
-    /** @var UI\TemplateFactory */
+    /** @var UI\ITemplateFactory */
     private $templateFactory;
 
-    public function __construct(UI\TemplateFactory $templateFactory)
+    public function __construct(UI\ITemplateFactory $templateFactory)
     {
         $this->templateFactory = $templateFactory;
     }
