@@ -1,23 +1,23 @@
-{var $sizes = ''}
-{var $srcSet = ''}
-{var $src = ''}
+{var $sizesAttr = ''}
+{var $srcSetAttr = ''}
+{var $srcAttr = ''}
 
 {if $lazyLoad}
-    {var $src = 'data-src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
+    {var $srcAttr = 'data-src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
     {if !is_null($srcSet) && !empty($sizes)}
-        {var $srcSet = 'data-src-set="'.$srcset.'"'}
-        {var $sizes = 'sizes="'.$sizes.'"'}
+        {var $srcSetAttr = 'data-src-set="'.$srcset.'"'}
+        {var $sizesAttr = 'sizes="'.$sizes.'"'}
     {/if}
 {else}
-    {var $src = 'src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
+    {var $srcAttr = 'src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
     {if !is_null($srcSet) && !empty($sizes)}
-        {var $srcSet = 'src-set="'.$srcset.'"'}
-        {var $sizes = 'sizes="'.$sizes.'"'}
+        {var $srcSetAttr = 'src-set="'.$srcset.'"'}
+        {var $sizesAttr = 'sizes="'.$sizes.'"'}
     {/if}
 {/if}
 
 
-<img {$src} {$srcSet} {$sizes} alt="{$alt}" class="{$class|noescape}"
+<img {$srcAttr|noescape} {$srcSetAttr|noescape} {$sizesAttr|noescape} alt="{$alt}" class="{$class|noescape}"
     {foreach $attributes as $attrName => $attr}
         {$attrName}="{$attr|noescape}"
     {/foreach}
