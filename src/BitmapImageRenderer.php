@@ -80,13 +80,13 @@ class BitmapImageRenderer extends UI\Control
             setcookie('webp-support', (string)$isWebpSupported, time() + 60 * 60 * 24);
         }
 
-        $cacheDir = '../temp/images';
+        $cacheDir = '../temp/cache/images';
 
         if (!mkdir($cacheDir) && !is_dir($cacheDir)) {
             throw new \RuntimeException(sprintf('Directory "%s" was not created', $cacheDir));
         }
 
-        $storage = new FileStorage('../temp/instagram');
+        $storage = new FileStorage($cacheDir);
         $this->cache = new Cache($storage);
 
         $this->isWebPSupported = (bool)$_COOKIE['webp-support'];
