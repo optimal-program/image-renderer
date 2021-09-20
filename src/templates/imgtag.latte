@@ -1,13 +1,25 @@
+{var $sizes = ''}
+{var $srcSet = ''}
+{var $src = ''}
+
 {if $lazyLoad}
-    <img data-src="{$basePath}/{$src}?time={filemtime($src)}" data-srcset="{$srcset|noescape}" sizes="{$sizes|noescape}" alt="{$alt}" class="{$class|noescape}"
-         {foreach $attributes as $attrName => $attr}
-             {$attrName}="{$attr|noescape}"
-         {/foreach}
-    />
+    {var $src = 'data-src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
+    {if !is_null($srcSet) && !empty($sizes)}
+        {var $srcSet = 'data-src-set="'.$srcset.'"'}
+        {var $sizes = 'sizes="'.$sizes.'"'}
+    {/if}
 {else}
-    <img src="{$basePath}/{$src}?time={filemtime($src)}" srcset="{$srcset|noescape}" sizes="{$sizes|noescape}" alt="{$alt}" class="{$class|noescape}"
+    {var $src = 'src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
+    {if !is_null($srcSet) && !empty($sizes)}
+        {var $srcSet = 'src-set="'.$srcset.'"'}
+        {var $sizes = 'sizes="'.$sizes.'"'}
+    {/if}
+{/if}
+
+{define renderAttributes array $attributes}
     {foreach $attributes as $attrName => $attr}
         {$attrName}="{$attr|noescape}"
     {/foreach}
-    />
-{/if}
+{/define}
+
+<img {$src} {$srcSet} {$sizes} alt="{$alt}" class="{$class|noescape}" {include renderAttributes($attributes)}/>
