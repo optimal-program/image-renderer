@@ -16,10 +16,9 @@
     {/if}
 {/if}
 
-{define renderAttributes array $attributes}
+
+<img {$src} {$srcSet} {$sizes} alt="{$alt}" class="{$class|noescape}"
     {foreach $attributes as $attrName => $attr}
         {$attrName}="{$attr|noescape}"
     {/foreach}
-{/define}
-
-<img {$src} {$srcSet} {$sizes} alt="{$alt}" class="{$class|noescape}" {include renderAttributes $attributes}/>
+/>
