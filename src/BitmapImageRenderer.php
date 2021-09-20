@@ -417,6 +417,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
+     * @param string $imgPath
      * @param array $imageData
      * @param string $alt
      * @param string $devicesSizes
@@ -424,10 +425,10 @@ class BitmapImageRenderer extends UI\Control
      * @param array $attributes
      * @return string
      */
-    protected function prepareImgTag(array $imageData, string $alt, string $devicesSizes, ?bool $lazyLoad, array $attributes = []): string
+    protected function prepareImgTag(string $imgPath, array $imageData, string $alt, string $devicesSizes, ?bool $lazyLoad, array $attributes = []): string
     {
         $template = $this->templateFactory->createTemplate();
-        $template->src = $imageData[0]->getFileRelativePath();
+        $template->src = $imgPath;
         $template->alt = $alt;
         $template->srcset = $this->prepareSrcSet($imageData);
 
@@ -552,7 +553,7 @@ class BitmapImageRenderer extends UI\Control
         if (!$data || $fileChanged) {
 
             $imageData = $this->createVariants($imagePath, $thumb ? $this->thumbResolutionSizes : $this->resolutionSizes, $fileChanged, $thumb);
-            $imgTag = $this->prepareImgTag($imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
+            $imgTag = $this->prepareImgTag($imagePath, $imageData, $alt, $devicesSizes, $lazyLoad, $attributes);
 
             $data = [
                 'img' => $imgTag,
