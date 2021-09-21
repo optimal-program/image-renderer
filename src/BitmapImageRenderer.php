@@ -60,7 +60,7 @@ class BitmapImageRenderer extends UI\Control
     protected $defaultSizes = '';
 
     /** @var bool */
-    protected $isWebPSupported = false;
+    protected static $isWebPSupported = false;
 
     /** @var int */
     protected $createVariantsBottomLimit = 500;
@@ -75,21 +75,31 @@ class BitmapImageRenderer extends UI\Control
         $this->imageDirectoryCommander = new FileCommander();
         $this->imagesManager = new ImagesManager();
 
-        if (!isset($_COOKIE['webp-support'])) {
-            $isWebpSupported = strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false;
-            setcookie('webp-support', (string)$isWebpSupported, time() + 60 * 60 * 24);
-        }
-
         $cacheDir = '../temp/cache/images';
 
-        if (!mkdir($cacheDir) && !is_dir($cacheDir)) {
-            throw new \RuntimeException(sprintf('Directory "%s" was not created', $cacheDir));
+        if(!file_exists($cacheDir)) {
+            if (!mkdir($cacheDir) && !is_dir($cacheDir)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $cacheDir));
+            }
         }
 
         $storage = new FileStorage($cacheDir);
         $this->cache = new Cache($storage);
+    }
 
-        $this->isWebPSupported = (bool)$_COOKIE['webp-support'];
+    /**
+     * 
+     */
+    public static function checkWebPSupport():void
+    {
+        if (!isset($_COOKIE['webp-support'])) {
+            $isWebpSupported = isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false;
+            setcookie('webp-support', (string)$isWebpSupported, time() + 60 * 60 * 24);
+        } else {
+            $isWebpSupported = (bool)$_COOKIE['webp-support'];
+        }
+
+        self::$isWebPSupported = $isWebpSupported;
     }
 
     /**
@@ -97,7 +107,7 @@ class BitmapImageRenderer extends UI\Control
      */
     public function isWebPSupported(): bool
     {
-        return $this->isWebPSupported;
+        return self::$isWebPSupported;
     }
 
     /**
