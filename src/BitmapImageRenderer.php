@@ -88,7 +88,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * 
+     *
      */
     public static function checkWebPSupport():void
     {

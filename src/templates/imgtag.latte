@@ -5,13 +5,13 @@
 {if $lazyLoad}
     {var $srcAttr = 'data-src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
     {if !is_null($srcset) && !empty($sizes)}
-        {var $srcSetAttr = 'data-src-set="'.$srcset.'"'}
+        {var $srcSetAttr = 'data-srcset="'.$srcset.'"'}
         {var $sizesAttr = 'sizes="'.$sizes.'"'}
     {/if}
 {else}
     {var $srcAttr = 'src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
     {if !is_null($srcset) && !empty($sizes)}
-        {var $srcSetAttr = 'src-set="'.$srcset.'"'}
+        {var $srcSetAttr = 'srcset="'.$srcset.'"'}
         {var $sizesAttr = 'sizes="'.$sizes.'"'}
     {/if}
 {/if}
