@@ -82,10 +82,8 @@ class BitmapImageRenderer extends UI\Control
 
         $cacheDir = '../temp/cache/images';
 
-        if(!file_exists($cacheDir)) {
-            if (!mkdir($cacheDir) && !is_dir($cacheDir)) {
-                throw new \RuntimeException(sprintf('Directory "%s" was not created', $cacheDir));
-            }
+        if (!mkdir($cacheDir) && !is_dir($cacheDir)) {
+            throw new \RuntimeException(sprintf('Directory "%s" was not created', $cacheDir));
         }
 
         $storage = new FileStorage($cacheDir);
