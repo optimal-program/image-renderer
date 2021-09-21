@@ -4,13 +4,13 @@
 
 {if $lazyLoad}
     {var $srcAttr = 'data-src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
-    {if !is_null($srcSet) && !empty($sizes)}
+    {if !is_null($srcset) && !empty($sizes)}
         {var $srcSetAttr = 'data-src-set="'.$srcset.'"'}
         {var $sizesAttr = 'sizes="'.$sizes.'"'}
     {/if}
 {else}
     {var $srcAttr = 'src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
-    {if !is_null($srcSet) && !empty($sizes)}
+    {if !is_null($srcset) && !empty($sizes)}
         {var $srcSetAttr = 'src-set="'.$srcset.'"'}
         {var $sizesAttr = 'sizes="'.$sizes.'"'}
     {/if}
