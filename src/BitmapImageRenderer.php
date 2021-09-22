@@ -351,6 +351,7 @@ class BitmapImageRenderer extends UI\Control
     protected function createVariants(string $imagePath, ?ImageResolutionsSettings $resolutionsSettings, bool $fileIsChanged, bool $thumb = false): array
     {
         $image = new BitmapImageFileResource($imagePath);
+        $this->imageDirectoryCommander->setPath($image->getFileDirectoryPath());
 
         $imageVariants = [];
 
