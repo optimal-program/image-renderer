@@ -11,6 +11,7 @@ use Optimal\FileManaging\Exception\FileNotFoundException;
 use Optimal\FileManaging\FileCommander;
 use Optimal\FileManaging\ImagesManager;
 
+use Optimal\FileManaging\resources\AbstractFileResource;
 use Optimal\FileManaging\resources\AbstractImageFileResource;
 use Optimal\FileManaging\resources\BitmapImageFileResource;
 use Optimal\FileManaging\Utils\FilesTypes;
@@ -77,7 +78,7 @@ class BitmapImageRenderer extends UI\Control
 
         $cacheDir = '../temp/cache/images';
 
-        if(!file_exists($cacheDir)) {
+        if (!file_exists($cacheDir)) {
             if (!mkdir($cacheDir) && !is_dir($cacheDir)) {
                 throw new \RuntimeException(sprintf('Directory "%s" was not created', $cacheDir));
             }
@@ -90,12 +91,13 @@ class BitmapImageRenderer extends UI\Control
     /**
      *
      */
-    public static function checkWebPSupport():void
+    public static function checkWebPSupport(): void
     {
         if (!isset($_COOKIE['webp-support'])) {
             $isWebpSupported = isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false;
             setcookie('webp-support', (string)$isWebpSupported, time() + 60 * 60 * 24);
-        } else {
+        }
+        else {
             $isWebpSupported = (bool)$_COOKIE['webp-support'];
         }
 
@@ -260,6 +262,78 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
+     * @param string $imageName
+     * @param int $width
+     * @param int $height
+     * @param bool $thumb
+     * @return string
+     */
+    protected function getVariantName(string $imageName, int $width = 0, $height = 0, bool $thumb = false): string
+    {
+        return $imageName . ($thumb ? '-thumb' : '') . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
+    }
+
+    /**
+     * @param BitmapImageFileResource $image
+     * @param ImageResolutionSettings $resolutionSize
+     * @param bool $extensionDirCreated
+     * @param bool $thumb
+     * @return BitmapImageFileResource|null
+     * @throws FileNotFoundException
+     * @throws \ImagickException
+     * @throws \Optimal\FileManaging\Exception\CreateDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
+     * @throws \Optimal\FileManaging\Exception\FileException
+     */
+    protected function createVariant(BitmapImageFileResource $image, ImageResolutionSettings $resolutionSize, bool &$extensionDirCreated, bool $thumb): ?BitmapImageFileResource
+    {
+        $imageName = $image->getName();
+
+        $width = $resolutionSize->getWidth();
+        $height = $resolutionSize->getHeight();
+
+        if ($width && $height) {
+            if (($width > $image->getWidth()) && ($height > $image->getHeight())) {
+                return null;
+            }
+        }
+        elseif ($height) {
+            if ($height > $image->getHeight()) {
+                return null;
+            }
+        }
+        elseif ($width > $image->getWidth()) {
+            return null;
+        }
+
+        $extensionMap = $this->extensionsMap[$image->getExtension()];
+
+        foreach ($extensionMap as $extension) {
+
+            if ($extension === "default") {
+                $extension = $image->getExtension();
+            }
+
+            if ($extension === FilesTypes::IMAGES_WEBP[0] && !$this->isWebPSupported()) {
+                continue;
+            }
+
+            if (!$extensionDirCreated) {
+                $this->imageCacheDirCommander->addDirectory($extension, true);
+                $extensionDirCreated = true;
+            }
+
+            $newName = $this->getVariantName($imageName, $width, $height, $thumb);
+
+            /** @var BitmapImageFileResource $imageVariant */
+            $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
+            return $imageVariant;
+        }
+
+        return null;
+    }
+
+    /**
      * @param string $imagePath
      * @param ImageResolutionsSettings|null $resolutionsSettings
      * @param bool $fileIsChanged
@@ -274,14 +348,12 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
      * @throws \Optimal\FileManaging\Exception\FileException
      */
-    protected function createVariants(string $imagePath, ?ImageResolutionsSettings $resolutionsSettings, bool $fileIsChanged, bool $thumb = false):array
+    protected function createVariants(string $imagePath, ?ImageResolutionsSettings $resolutionsSettings, bool $fileIsChanged, bool $thumb = false): array
     {
         $image = new BitmapImageFileResource($imagePath);
-        $this->imageDirectoryCommander->setPath($image->getFileDirectoryPath());
 
         $imageVariants = [];
 
-        $imageName = $image->getName();
         $this->imagesManager->setSourceDirectory($image->getFileDirectoryPath());
 
         $cacheDirPath = $this->imageCacheDirCommander->getAbsolutePath();
@@ -306,50 +378,10 @@ class BitmapImageRenderer extends UI\Control
 
             /** @var ImageResolutionSettings $resolutionSize */
             foreach ($this->resolutionSizes->getResolutionsSettings() as $resolutionSize) {
-
-                $width = $resolutionSize->getWidth();
-                $height = $resolutionSize->getHeight();
-
-                if ($width && $height) {
-                    if (($width > $image->getWidth()) && ($height > $image->getHeight())) {
-                        continue;
-                    }
+                $variant = $this->createVariant($image, $resolutionSize, $extensionDirCreated, $thumb);
+                if (!is_null($variant)) {
+                    $imageVariants[] = $variant;
                 }
-                elseif ($height) {
-                    if ($height > $image->getHeight()) {
-                        continue;
-                    }
-                }
-                elseif ($width > $image->getWidth()) {
-                    continue;
-                }
-
-                $extensionMap = $this->extensionsMap[$image->getExtension()];
-
-                foreach ($extensionMap as $extension) {
-
-                    if ($extension === "default") {
-                        $extension = $image->getExtension();
-                    }
-
-                    if ($extension === FilesTypes::IMAGES_WEBP[0] && !$this->isWebPSupported()) {
-                        continue;
-                    }
-
-                    if (!$extensionDirCreated) {
-                        $this->imageCacheDirCommander->addDirectory($extension, true);
-                        $extensionDirCreated = true;
-                    }
-
-                    $newName = $imageName . ($thumb ? '-thumb' : '') . (($width > 0) ? '-w' . $width : '') . (($height > 0) ? '-h' . $height : '');
-
-                    /** @var BitmapImageFileResource $imageVariant */
-                    $imageVariant = $this->createImageSize($image, $this->imageCacheDirCommander->getAbsolutePath(), $newName, $extension, $width, $height);
-                    $imageVariants[] = $imageVariant;
-
-                    break;
-                }
-
             }
 
             $this->imageCacheDirCommander->moveUp();
@@ -404,7 +436,7 @@ class BitmapImageRenderer extends UI\Control
     protected function prepareSrcSet(array $variants): ?string
     {
 
-        if(empty($variants)){
+        if (empty($variants)) {
             return null;
         }
 
@@ -520,7 +552,7 @@ class BitmapImageRenderer extends UI\Control
      * @param $lastTime
      * @return bool
      */
-    protected function isFileChanged($data, $fileHash, $lastTime):bool
+    protected function isFileChanged($data, $fileHash, $lastTime): bool
     {
         return !$data ? false : $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
     }
@@ -544,7 +576,7 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    protected function prepareImage(string $imagePath, string $alt, ImageResolutionsSettings $resolutionsSettings, ?bool $lazyLoad = null, string $devicesSizes = "", array $attributes = [],  bool $thumb = false): string
+    protected function prepareImageWithMultipleVariants(string $imagePath, string $alt, ImageResolutionsSettings $resolutionsSettings, ?bool $lazyLoad = null, string $devicesSizes = "", array $attributes = [], bool $thumb = false): string
     {
         if (!$this->imageCacheDirCommander) {
             throw new \Exception('Images variants cache directory is not set');
@@ -582,6 +614,80 @@ class BitmapImageRenderer extends UI\Control
 
     /**
      * @param string $imagePath
+     * @param ImageResolutionSettings $resolutionSettings
+     * @param string $alt
+     * @param bool|null $lazyLoad
+     * @param array $attributes
+     * @param bool $thumb
+     * @return string
+     * @throws DirectoryException
+     * @throws FileNotFoundException
+     * @throws \ImagickException
+     * @throws \Optimal\FileManaging\Exception\CreateDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DeleteDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DeleteFileException
+     * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
+     * @throws \Optimal\FileManaging\Exception\FileException
+     * @throws \Throwable
+     */
+    protected function prepareImageWithSingleVariant(string $imagePath, ImageResolutionSettings $resolutionSettings, string $alt, ?bool $lazyLoad, array $attributes, bool $thumb = false):string
+    {
+        $key = md5($imagePath . $resolutionSettings->getWidth() . $resolutionSettings->getHeight() . file_get_contents($imagePath));
+
+        $data = $this->cache->load($key);
+
+        $fileHash = sha1(file_get_contents($imagePath));
+        $lastTime = filectime($imagePath);
+        $fileChanged = $this->isFileChanged($data, $fileHash, $lastTime);
+
+        if (!$data || $fileChanged) {
+
+            $image = new BitmapImageFileResource($imagePath);
+
+            $this->imagesManager->setSourceDirectory($image->getFileDirectoryPath());
+
+            $cacheDirPath = $this->imageCacheDirCommander->getAbsolutePath();
+
+            if (!$this->imageCacheDirCommander) {
+                throw new DirectoryException("Images variants cache directory is not defined");
+            }
+
+            $this->imageCacheDirCommander->addDirectory($image->getName(), true);
+            $this->imageCacheDirCommander->addDirectory($thumb ? 'thumbs' : 'image_variants', true);
+
+            if ($fileChanged) {
+                $this->imageCacheDirCommander->clearDir();
+            }
+
+            $extensionDirCreated = false;
+            $variant = $this->createVariant($image, $resolutionSettings, $extensionDirCreated, $thumb);
+
+            $this->imageCacheDirCommander->setPath($cacheDirPath);
+
+            if(!is_null($variant)){
+                $imgTag = $this->prepareImgTag($variant->getFileRelativePath(), [], $alt, '', $lazyLoad, $attributes);
+            } else {
+                $imgTag = $this->prepareImgTag($imagePath, [], $alt, '', $lazyLoad, $attributes);
+            }
+
+            $data = [
+                'img' => $imgTag,
+                'lastHash' => $fileHash,
+                'lastModifiedTime' => $lastTime
+            ];
+
+            $this->cache->save($key, $data, [
+                Cache::EXPIRE => '12 months',
+                Cache::SLIDING => true,
+            ]);
+
+        }
+
+        return $data['img'];
+    }
+
+    /**
+     * @param string $imagePath
      * @param ImageResolutionsSettings $resolutionsSettings
      * @param bool $thumb
      * @throws DirectoryException
@@ -594,7 +700,7 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    protected function renderSrcSet(string $imagePath, ImageResolutionsSettings $resolutionsSettings, bool $thumb = false):void
+    protected function renderSrcSet(string $imagePath, ImageResolutionsSettings $resolutionsSettings, bool $thumb = false): void
     {
         $key = md5($imagePath . file_get_contents($imagePath));
 
@@ -693,7 +799,7 @@ class BitmapImageRenderer extends UI\Control
     public function renderImageThumb(string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $sizes = "", string $caption = null, array $attributes = []): void
     {
         $this->template->setFile(__DIR__ . '/templates/image.latte');
-        $this->template->imgTag = $this->prepareImage($imageThumbPath, $alt, $this->thumbResolutionSizes, $lazyLoad, $sizes, $attributes, true);
+        $this->template->imgTag = $this->prepareImageWithMultipleVariants($imageThumbPath, $alt, $this->thumbResolutionSizes, $lazyLoad, $sizes, $attributes, true);
         $this->template->caption = $caption;
         $this->template->render();
     }
@@ -720,6 +826,56 @@ class BitmapImageRenderer extends UI\Control
     {
         ob_start();
         $this->renderImageThumb($imageThumbPath, $alt, $lazyLoad, $devicesSizes, $caption, $attributes);
+        return ob_get_contents();
+    }
+
+    /**
+     * @param string $imageThumbPath
+     * @param ImageResolutionSettings $resolutionSettings
+     * @param string $alt
+     * @param string $caption
+     * @param bool|null $lazyLoad
+     * @param array $attributes
+     * @throws DirectoryException
+     * @throws FileNotFoundException
+     * @throws \ImagickException
+     * @throws \Optimal\FileManaging\Exception\CreateDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DeleteDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DeleteFileException
+     * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
+     * @throws \Optimal\FileManaging\Exception\FileException
+     * @throws \Throwable
+     */
+    public function renderImageThumbVariant(string $imageThumbPath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):void
+    {
+        $this->template->setFile(__DIR__ . '/templates/image.latte');
+        $this->template->imgTag = $this->prepareImageWithSingleVariant($imageThumbPath, $resolutionSettings, $alt, $lazyLoad, $attributes, true);
+        $this->template->caption = $caption;
+        $this->template->render();
+    }
+
+    /**
+     * @param string $imageThumbPath
+     * @param ImageResolutionSettings $resolutionSettings
+     * @param string $alt
+     * @param string $caption
+     * @param bool|null $lazyLoad
+     * @param array $attributes
+     * @return string
+     * @throws DirectoryException
+     * @throws FileNotFoundException
+     * @throws \ImagickException
+     * @throws \Optimal\FileManaging\Exception\CreateDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DeleteDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DeleteFileException
+     * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
+     * @throws \Optimal\FileManaging\Exception\FileException
+     * @throws \Throwable
+     */
+    public function getImageThumbVariant(string $imageThumbPath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):string
+    {
+        ob_start();
+        $this->renderImageThumbVariant($imageThumbPath, $resolutionSettings, $alt, $caption, $lazyLoad, $attributes);
         return ob_get_contents();
     }
 
@@ -793,7 +949,7 @@ class BitmapImageRenderer extends UI\Control
     public function renderImage(string $imagePath, string $alt, ?bool $lazyLoad = null, string $sizes = "", string $caption = null, array $attributes = []): void
     {
         $this->template->setFile(__DIR__ . '/templates/image.latte');
-        $this->template->imgTag = $this->prepareImage($imagePath, $alt, $this->resolutionSizes, $lazyLoad, $sizes, $attributes);
+        $this->template->imgTag = $this->prepareImageWithMultipleVariants($imagePath, $alt, $this->resolutionSizes, $lazyLoad, $sizes, $attributes);
 
         $this->template->lightbox = false;
         $this->template->caption = $caption;
@@ -823,6 +979,56 @@ class BitmapImageRenderer extends UI\Control
     {
         ob_start();
         $this->renderImage($imagePath, $alt, $lazyLoad, $devicesSizes, $caption, $attributes);
+        return ob_get_contents();
+    }
+
+    /**
+     * @param string $imagePath
+     * @param ImageResolutionSettings $resolutionSettings
+     * @param string $alt
+     * @param string $caption
+     * @param bool|null $lazyLoad
+     * @param array $attributes
+     * @throws DirectoryException
+     * @throws FileNotFoundException
+     * @throws \ImagickException
+     * @throws \Optimal\FileManaging\Exception\CreateDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DeleteDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DeleteFileException
+     * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
+     * @throws \Optimal\FileManaging\Exception\FileException
+     * @throws \Throwable
+     */
+    public function renderImageVariant(string $imagePath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):void
+    {
+        $this->template->setFile(__DIR__ . '/templates/image.latte');
+        $this->template->imgTag = $this->prepareImageWithSingleVariant($imagePath, $resolutionSettings, $alt, $lazyLoad, $attributes);
+        $this->template->caption = $caption;
+        $this->template->render();
+    }
+
+    /**
+     * @param string $imagePath
+     * @param ImageResolutionSettings $resolutionSettings
+     * @param string $alt
+     * @param string $caption
+     * @param bool|null $lazyLoad
+     * @param array $attributes
+     * @return string
+     * @throws DirectoryException
+     * @throws FileNotFoundException
+     * @throws \ImagickException
+     * @throws \Optimal\FileManaging\Exception\CreateDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DeleteDirectoryException
+     * @throws \Optimal\FileManaging\Exception\DeleteFileException
+     * @throws \Optimal\FileManaging\Exception\DirectoryNotFoundException
+     * @throws \Optimal\FileManaging\Exception\FileException
+     * @throws \Throwable
+     */
+    public function getImageVariant(string $imagePath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):string
+    {
+        ob_start();
+        $this->renderImageVariant($imagePath, $resolutionSettings, $alt, $caption, $lazyLoad, $attributes);
         return ob_get_contents();
     }
 
