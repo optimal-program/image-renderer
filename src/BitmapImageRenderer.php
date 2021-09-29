@@ -17,6 +17,7 @@ use Optimal\FileManaging\resources\BitmapImageFileResource;
 use Optimal\FileManaging\Utils\FilesTypes;
 use Optimal\FileManaging\Utils\ImageResolutionSettings;
 use Optimal\FileManaging\Utils\ImageResolutionsSettings;
+use function _PHPStan_76800bfb5\RingCentral\Psr7\str;
 
 class BitmapImageRenderer extends UI\Control
 {
@@ -88,11 +89,9 @@ class BitmapImageRenderer extends UI\Control
         $this->cache = new Cache($storage);
     }
 
-    /**
-     *
-     */
     public static function checkWebPSupport(): void
     {
+
         if (!isset($_COOKIE['webp-support'])) {
             $isWebpSupported = isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false;
             setcookie('webp-support', (string)$isWebpSupported, time() + 60 * 60 * 24);
@@ -585,7 +584,7 @@ class BitmapImageRenderer extends UI\Control
 
         [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
 
-        $key = md5($imagePath . file_get_contents($imagePath) . $this->serializeResolutionSizes($resolutionsSettings) . $alt . $devicesSizes . $lazyLoad . implode(';', $attributes));
+        $key = md5((string)$this->isWebPSupported() . $imagePath . file_get_contents($imagePath) . $this->serializeResolutionSizes($resolutionsSettings) . $alt . $devicesSizes . $lazyLoad . implode(';', $attributes));
 
         $data = $this->cache->load($key);
 
@@ -633,7 +632,7 @@ class BitmapImageRenderer extends UI\Control
      */
     protected function prepareImageWithSingleVariant(string $imagePath, ImageResolutionSettings $resolutionSettings, string $alt, ?bool $lazyLoad, array $attributes, bool $thumb = false):array
     {
-        $key = md5($imagePath . $resolutionSettings->getWidth() . $resolutionSettings->getHeight() . file_get_contents($imagePath));
+        $key = md5((string) $this->isWebPSupported() . $imagePath . $resolutionSettings->getWidth() . $resolutionSettings->getHeight() . file_get_contents($imagePath));
 
         $data = $this->cache->load($key);
 
@@ -706,7 +705,7 @@ class BitmapImageRenderer extends UI\Control
      */
     protected function renderSrcSet(string $imagePath, ImageResolutionsSettings $resolutionsSettings, bool $thumb = false): void
     {
-        $key = md5($imagePath . file_get_contents($imagePath));
+        $key = md5((string) $this->isWebPSupported() . $imagePath . file_get_contents($imagePath));
 
         $data = $this->cache->load($key);
 
