@@ -217,12 +217,8 @@ class BitmapImageRenderer extends UI\Control
      */
     protected function checkImagesCachePath(string $imagePath, string $cacheDirPath): void
     {
-        bdump($imagePath);
-
         $commonPart = $this->lcs2($imagePath, $cacheDirPath);
         $imageDirWithoutCommonPart = str_replace($commonPart, "", $imagePath);
-
-        bdump($imageDirWithoutCommonPart);
 
         if ($this->imageCacheDirCommander->directoryExists($this->imageCacheDirCommander->getAbsolutePath() . "/" . $imageDirWithoutCommonPart)) {
             $this->imageCacheDirCommander->setPath($this->imageCacheDirCommander->getAbsolutePath() . "/" . $imageDirWithoutCommonPart);
