@@ -172,9 +172,14 @@ class BitmapImageRenderer extends UI\Control
 
     /**
      * @param string $noImagePath
+     * @throws \Exception
      */
     public function setNoImagePath(string $noImagePath): void
     {
+        if(!FileCommander::isBitmapImage(pathinfo($noImagePath, PATHINFO_EXTENSION))){
+            throw new \Exception('No-image is not bitmap.');
+        }
+
         $this->noImagePath = $noImagePath;
     }
 
@@ -185,6 +190,10 @@ class BitmapImageRenderer extends UI\Control
      */
     protected function checkImage(?string $imagePath):string
     {
+        if(!FileCommander::isBitmapImage(pathinfo($imagePath, PATHINFO_EXTENSION))){
+            throw new \Exception('Image is not bitmap.');
+        }
+
         if (!is_null($imagePath) && file_exists($imagePath) && @getimagesize($imagePath)) {
             return $imagePath;
         }

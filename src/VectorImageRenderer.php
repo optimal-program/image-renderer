@@ -3,6 +3,7 @@
 namespace Optimal\ImageRenderer;
 
 use Nette\Application\UI;
+use Optimal\FileManaging\FileCommander;
 
 class VectorImageRenderer extends UI\Control
 {
@@ -20,9 +21,14 @@ class VectorImageRenderer extends UI\Control
 
     /**
      * @param string $noImagePath
+     * @throws \Exception
      */
     public function setNoImagePath(string $noImagePath): void
     {
+        if(FileCommander::isBitmapImage(pathinfo($noImagePath, PATHINFO_EXTENSION))){
+            throw new \Exception('No-image is not vector.');
+        }
+
         $this->noImagePath = $noImagePath;
     }
 
@@ -33,6 +39,11 @@ class VectorImageRenderer extends UI\Control
      */
     protected function checkImage(?string $imagePath):string
     {
+
+        if(FileCommander::isBitmapImage(pathinfo($imagePath, PATHINFO_EXTENSION))){
+            throw new \Exception('Image is not vector.');
+        }
+
         if (!is_null($imagePath) && file_exists($imagePath)) {
             return $imagePath;
         }
