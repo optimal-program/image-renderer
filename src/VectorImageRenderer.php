@@ -33,7 +33,7 @@ class VectorImageRenderer extends UI\Control
      */
     protected function checkImage(?string $imagePath):string
     {
-        if (!is_null($imagePath) && file_exists($imagePath) && @getimagesize($imagePath)) {
+        if (!is_null($imagePath) && file_exists($imagePath)) {
             return $imagePath;
         }
 
