@@ -190,11 +190,13 @@ class BitmapImageRenderer extends UI\Control
      */
     protected function checkImage(?string $imagePath):string
     {
-        if(!FileCommander::isBitmapImage(pathinfo($imagePath, PATHINFO_EXTENSION))){
-            throw new \Exception('Image is not bitmap.');
-        }
 
         if (!is_null($imagePath) && file_exists($imagePath) && @getimagesize($imagePath)) {
+
+            if(!FileCommander::isBitmapImage(pathinfo($imagePath, PATHINFO_EXTENSION))){
+                throw new \Exception('Image is not bitmap.');
+            }
+
             return $imagePath;
         }
 
