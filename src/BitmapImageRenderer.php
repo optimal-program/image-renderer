@@ -11,13 +11,11 @@ use Optimal\FileManaging\Exception\FileNotFoundException;
 use Optimal\FileManaging\FileCommander;
 use Optimal\FileManaging\ImagesManager;
 
-use Optimal\FileManaging\resources\AbstractFileResource;
 use Optimal\FileManaging\resources\AbstractImageFileResource;
 use Optimal\FileManaging\resources\BitmapImageFileResource;
 use Optimal\FileManaging\Utils\FilesTypes;
 use Optimal\FileManaging\Utils\ImageResolutionSettings;
 use Optimal\FileManaging\Utils\ImageResolutionsSettings;
-use function _PHPStan_76800bfb5\RingCentral\Psr7\str;
 
 class BitmapImageRenderer extends UI\Control
 {
@@ -66,6 +64,9 @@ class BitmapImageRenderer extends UI\Control
 
     /** @var int */
     protected $createVariantsBottomLimit = 500;
+
+    /** @var string */
+    protected $noImagePath;
 
     /**
      * BitmapImageRenderer constructor.
@@ -167,6 +168,32 @@ class BitmapImageRenderer extends UI\Control
     public function setCreateVariantsBottomLimit(int $createVariantsBottomLimit): void
     {
         $this->createVariantsBottomLimit = $createVariantsBottomLimit;
+    }
+
+    /**
+     * @param string $noImagePath
+     */
+    public function setNoImagePath(string $noImagePath): void
+    {
+        $this->noImagePath = $noImagePath;
+    }
+
+    /**
+     * @param string|null $imagePath
+     * @return string
+     * @throws \Exception
+     */
+    protected function checkImage(?string $imagePath):string
+    {
+        if (!is_null($imagePath) && file_exists($imagePath) && @getimagesize($imagePath)) {
+            return $imagePath;
+        }
+
+        if(is_null($this->noImagePath)){
+            throw new \Exception('No image is not set.');
+        }
+
+        return $this->noImagePath;
     }
 
     /**
@@ -736,7 +763,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imageThumbPath
+     * @param string|null $imageThumbPath
      * @throws DirectoryException
      * @throws FileNotFoundException
      * @throws \ImagickException
@@ -747,13 +774,14 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function renderImageThumbSrcSet(string $imageThumbPath): void
+    public function renderImageThumbSrcSet(?string $imageThumbPath): void
     {
+        $imageThumbPath = $this->checkImage($imageThumbPath);
         $this->renderSrcSet($imageThumbPath, $this->thumbResolutionSizes, true);
     }
 
     /**
-     * @param string $imageThumbPath
+     * @param string|null $imageThumbPath
      * @return string
      * @throws DirectoryException
      * @throws FileNotFoundException
@@ -765,7 +793,7 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function getImageThumbSrcSet(string $imageThumbPath): string
+    public function getImageThumbSrcSet(?string $imageThumbPath): string
     {
         ob_start();
         $this->renderImageThumbSrcSet($imageThumbPath);
@@ -786,7 +814,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imageThumbPath
+     * @param string|null $imageThumbPath
      * @param string $alt
      * @param bool|null $lazyLoad
      * @param string $sizes
@@ -802,8 +830,9 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function renderImageThumb(string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $sizes = "", string $caption = null, array $attributes = []): void
+    public function renderImageThumb(?string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $sizes = "", string $caption = null, array $attributes = []): void
     {
+        $imageThumbPath = $this->checkImage($imageThumbPath);
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $this->prepareImageWithMultipleVariants($imageThumbPath, $alt, $this->thumbResolutionSizes, $lazyLoad, $sizes, $attributes, true);
         $this->template->caption = $caption;
@@ -811,7 +840,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imageThumbPath
+     * @param string|null $imageThumbPath
      * @param string $alt
      * @param bool|null $lazyLoad
      * @param string $devicesSizes
@@ -828,7 +857,7 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function getImageThumb(string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = []): string
+    public function getImageThumb(?string $imageThumbPath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = []): string
     {
         ob_start();
         $this->renderImageThumb($imageThumbPath, $alt, $lazyLoad, $devicesSizes, $caption, $attributes);
@@ -836,7 +865,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imageThumbPath
+     * @param string|null $imageThumbPath
      * @param ImageResolutionSettings $resolutionSettings
      * @param string $alt
      * @param string $caption
@@ -852,8 +881,10 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function renderImageThumbVariant(string $imageThumbPath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):void
+    public function renderImageThumbVariant(?string $imageThumbPath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):void
     {
+        $imageThumbPath = $this->checkImage($imageThumbPath);
+
         $this->template->setFile(__DIR__ . '/templates/image.latte');
 
         [$imgTag] = $this->prepareImageWithSingleVariant($imageThumbPath, $resolutionSettings, $alt, $lazyLoad, $attributes, true);
@@ -864,7 +895,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imageThumbPath
+     * @param string|null $imageThumbPath
      * @param ImageResolutionSettings $resolutionSettings
      * @param string $alt
      * @param string $caption
@@ -881,7 +912,7 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function getImageThumbVariant(string $imageThumbPath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):string
+    public function getImageThumbVariant(?string $imageThumbPath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):string
     {
         ob_start();
         $this->renderImageThumbVariant($imageThumbPath, $resolutionSettings, $alt, $caption, $lazyLoad, $attributes);
@@ -889,7 +920,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imageThumbPath
+     * @param string|null $imageThumbPath
      * @param ImageResolutionSettings $resolutionSettings
      * @return string
      * @throws DirectoryException
@@ -902,14 +933,15 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function getImageThumbVariantSrc(string $imageThumbPath, ImageResolutionSettings $resolutionSettings):string
+    public function getImageThumbVariantSrc(?string $imageThumbPath, ImageResolutionSettings $resolutionSettings):string
     {
+        $imageThumbPath = $this->checkImage($imageThumbPath);
         [, $src] = $this->prepareImageWithSingleVariant($imageThumbPath, $resolutionSettings, '', null, []);
         return $src;
     }
 
     /**
-     * @param string $imagePath
+     * @param string|null $imagePath
      * @throws DirectoryException
      * @throws FileNotFoundException
      * @throws \ImagickException
@@ -920,13 +952,14 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function renderImageSrcSet(string $imagePath): void
+    public function renderImageSrcSet(?string $imagePath): void
     {
+        $imagePath = $this->checkImage($imagePath);
         $this->renderSrcSet($imagePath, $this->resolutionSizes);
     }
 
     /**
-     * @param string $imagePath
+     * @param string|null $imagePath
      * @return string
      * @throws DirectoryException
      * @throws FileNotFoundException
@@ -938,7 +971,7 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function getImageSrcSet(string $imagePath): string
+    public function getImageSrcSet(?string $imagePath): string
     {
         ob_start();
         $this->renderImageSrcSet($imagePath);
@@ -959,7 +992,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imagePath
+     * @param string|null $imagePath
      * @param string $alt
      * @param bool|null $lazyLoad
      * @param string $sizes
@@ -975,8 +1008,10 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function renderImage(string $imagePath, string $alt, ?bool $lazyLoad = null, string $sizes = "", string $caption = null, array $attributes = []): void
+    public function renderImage(?string $imagePath, string $alt, ?bool $lazyLoad = null, string $sizes = "", string $caption = null, array $attributes = []): void
     {
+        $imagePath = $this->checkImage($imagePath);
+
         $this->template->setFile(__DIR__ . '/templates/image.latte');
         $this->template->imgTag = $this->prepareImageWithMultipleVariants($imagePath, $alt, $this->resolutionSizes, $lazyLoad, $sizes, $attributes);
 
@@ -987,7 +1022,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imagePath
+     * @param string|null $imagePath
      * @param string $alt
      * @param bool|null $lazyLoad
      * @param string $devicesSizes
@@ -1004,7 +1039,7 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function getImage(string $imagePath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = []): string
+    public function getImage(?string $imagePath, string $alt, ?bool $lazyLoad = null, string $devicesSizes = "", string $caption = null, array $attributes = []): string
     {
         ob_start();
         $this->renderImage($imagePath, $alt, $lazyLoad, $devicesSizes, $caption, $attributes);
@@ -1012,7 +1047,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imagePath
+     * @param string|null $imagePath
      * @param ImageResolutionSettings $resolutionSettings
      * @param string $alt
      * @param string $caption
@@ -1028,8 +1063,10 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function renderImageVariant(string $imagePath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):void
+    public function renderImageVariant(?string $imagePath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):void
     {
+        $imagePath = $this->checkImage($imagePath);
+
         $this->template->setFile(__DIR__ . '/templates/image.latte');
 
         [$imgTag] = $this->prepareImageWithSingleVariant($imagePath, $resolutionSettings, $alt, $lazyLoad, $attributes);
@@ -1040,7 +1077,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imagePath
+     * @param string|null $imagePath
      * @param ImageResolutionSettings $resolutionSettings
      * @param string $alt
      * @param string $caption
@@ -1057,7 +1094,7 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function getImageVariant(string $imagePath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):string
+    public function getImageVariant(?string $imagePath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):string
     {
         ob_start();
         $this->renderImageVariant($imagePath, $resolutionSettings, $alt, $caption, $lazyLoad, $attributes);
@@ -1065,7 +1102,7 @@ class BitmapImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $imagePath
+     * @param string|null $imagePath
      * @param ImageResolutionSettings $resolutionSettings
      * @return string
      * @throws DirectoryException
@@ -1078,8 +1115,10 @@ class BitmapImageRenderer extends UI\Control
      * @throws \Optimal\FileManaging\Exception\FileException
      * @throws \Throwable
      */
-    public function getImageVariantSrc(string $imagePath, ImageResolutionSettings $resolutionSettings):string
+    public function getImageVariantSrc(?string $imagePath, ImageResolutionSettings $resolutionSettings):string
     {
+        $imagePath = $this->checkImage($imagePath);
+
         [, $src] = $this->prepareImageWithSingleVariant($imagePath, $resolutionSettings, '', null, []);
         return $src;
     }

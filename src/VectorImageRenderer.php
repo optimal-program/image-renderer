@@ -10,9 +10,38 @@ class VectorImageRenderer extends UI\Control
     /** @var UI\ITemplateFactory */
     private $templateFactory;
 
+    /** @var string */
+    protected $noImagePath;
+
     public function __construct(UI\ITemplateFactory $templateFactory)
     {
         $this->templateFactory = $templateFactory;
+    }
+
+    /**
+     * @param string $noImagePath
+     */
+    public function setNoImagePath(string $noImagePath): void
+    {
+        $this->noImagePath = $noImagePath;
+    }
+
+    /**
+     * @param string|null $imagePath
+     * @return string
+     * @throws \Exception
+     */
+    protected function checkImage(?string $imagePath):string
+    {
+        if (!is_null($imagePath) && file_exists($imagePath) && @getimagesize($imagePath)) {
+            return $imagePath;
+        }
+
+        if(is_null($this->noImagePath)){
+            throw new \Exception('No image is not set.');
+        }
+
+        return $this->noImagePath;
     }
 
     protected function prepareClass(array $classes)
@@ -24,12 +53,15 @@ class VectorImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $svgPath
+     * @param string|null $svgPath
      * @param string $alt
      * @param array $attributes
+     * @throws \Exception
      */
-    public function render(string $svgPath, string $alt, array $attributes = [])
+    public function render(?string $svgPath, string $alt, array $attributes = []):void
     {
+        $svgPath = $this->checkImage($svgPath);
+
         $this->template->setFile(__DIR__ . '/templates/imgtag.latte');
 
         $this->template->src = $svgPath;
@@ -53,12 +85,13 @@ class VectorImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $svgPath
+     * @param string|null $svgPath
      * @param string $alt
      * @param array $attributes
      * @return string
+     * @throws \Exception
      */
-    public function renderAsString(string $svgPath, string $alt, array $attributes = []):string
+    public function renderAsString(?string $svgPath, string $alt, array $attributes = []):string
     {
         ob_start();
         $this->render($svgPath, $alt, $attributes);
@@ -66,20 +99,24 @@ class VectorImageRenderer extends UI\Control
     }
 
     /**
-     * @param string $svgPath
+     * @param string|null $svgPath
+     * @throws \Exception
      */
-    public function renderInline(string $svgPath):void
+    public function renderInline(?string $svgPath):void
     {
+        $svgPath = $this->checkImage($svgPath);
+
         $this->template->setFile(__DIR__ . '/templates/inlineSvg.latte');
         $this->template->svgContent = file_get_contents($svgPath);
         $this->template->render();
     }
 
     /**
-     * @param string $svgPath
+     * @param string|null $svgPath
      * @return string
+     * @throws \Exception
      */
-    public function renderInlineAsString(string $svgPath):string
+    public function renderInlineAsString(?string $svgPath):string
     {
         ob_start();
         $this->renderInline($svgPath);
