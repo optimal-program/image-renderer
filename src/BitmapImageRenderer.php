@@ -504,7 +504,7 @@ class BitmapImageRenderer extends UI\Control
         $template = $this->templateFactory->createTemplate();
         $template->classes = $classes;
         $template->setFile(__DIR__ . '/templates/class.latte');
-        return trim(preg_replace('/\s\s+/', ' ', $template));
+        return trim(preg_replace('/\s\s+/', ' ', (string) $template));
     }
 
     /**
@@ -542,7 +542,7 @@ class BitmapImageRenderer extends UI\Control
         $template->lazyLoad = $lazyLoad;
 
         $template->setFile(__DIR__ . '/templates/imgtag.latte');
-        return trim(preg_replace('/\s\s+/', ' ', $template));
+        return trim(preg_replace('/\s\s+/', ' ', (string) $template));
     }
 
     /**
