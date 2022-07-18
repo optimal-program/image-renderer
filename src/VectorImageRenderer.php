@@ -40,13 +40,21 @@ class VectorImageRenderer extends UI\Control
     protected function checkImage(?string $imagePath):string
     {
 
-        if (!is_null($imagePath) && file_exists($imagePath)) {
+        if (!is_null($imagePath)) {
 
             if(FileCommander::isBitmapImage(pathinfo($imagePath, PATHINFO_EXTENSION))){
                 throw new \Exception('Image is not vector.');
             }
 
-            return $imagePath;
+            if(filter_var($imagePath, FILTER_VALIDATE_URL)) {
+                $headers=get_headers($imagePath);
+                if(stripos($headers[0],"200 OK")) {
+                    return $imagePath;
+                }
+            } elseif (file_exists($imagePath)) {
+                return $imagePath;
+            }
+
         }
 
         if(is_null($this->noImagePath)){
