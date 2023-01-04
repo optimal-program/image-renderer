@@ -2,19 +2,20 @@
 
 namespace Optimal\ImageRenderer;
 
-use Nette\Application\UI;
+use Nette\Application\UI\Control;
+use Nette\Application\UI\TemplateFactory;
 use Optimal\FileManaging\FileCommander;
 
-class VectorImageRenderer extends UI\Control
+class VectorImageRenderer extends Control
 {
 
-    /** @var UI\ITemplateFactory */
+    /** @var TemplateFactory */
     private $templateFactory;
 
     /** @var string */
     protected $noImagePath;
 
-    public function __construct(UI\ITemplateFactory $templateFactory)
+    public function __construct(TemplateFactory $templateFactory)
     {
         $this->templateFactory = $templateFactory;
     }
@@ -127,7 +128,7 @@ class VectorImageRenderer extends UI\Control
         $svgPath = $this->checkImage($svgPath);
 
         $this->template->setFile(__DIR__ . '/templates/inlineSvg.latte');
-        $this->template->svgContent = file_get_contents($svgPath);
+        $this->template->svgContent = mb_convert_encoding(file_get_contents($svgPath), 'HTML-ENTITIES', "UTF-8");
         $this->template->render();
     }
 
