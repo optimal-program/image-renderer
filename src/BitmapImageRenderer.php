@@ -493,7 +493,7 @@ class BitmapImageRenderer extends UI\Control
         $template = $this->templateFactory->createTemplate();
         $template->variants = $variants;
         $template->setFile(__DIR__ . '/templates/srcset.latte');
-        return trim(preg_replace('/\s\s+/', ' ', $template));
+        return trim(preg_replace('/\s\s+/', ' ', (string) $template));
     }
 
     /**
