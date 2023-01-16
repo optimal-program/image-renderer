@@ -36,6 +36,7 @@ class BitmapImageRenderer extends UI\Control
     private $cache;
 
     private $extensionsMap = [
+        'webp' => ['webp', 'jpg'],
         'jpg' => ['webp', 'jpg'],
         'jpeg' => ['webp', 'jpg'],
         'jfif' => ['webp', 'jpg'],
