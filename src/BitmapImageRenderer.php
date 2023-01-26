@@ -345,7 +345,7 @@ class BitmapImageRenderer extends UI\Control
             return null;
         }
 
-        $extensionMap = $this->extensionsMap[$image->getExtension()];
+        $extensionMap = $this->extensionsMap[strtolower($image->getExtension())];
 
         foreach ($extensionMap as $extension) {
 
