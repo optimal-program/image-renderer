@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Optimal\ImageRenderer;
 
@@ -6,6 +6,6 @@ interface VectorImageRendererFactory
 {
 
     /** @return VectorImageRenderer */
-    function create();
+    public function create():VectorImageRenderer;
 
 }
