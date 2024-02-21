@@ -11,8 +11,8 @@ use Optimal\FileManaging\Exception\FileNotFoundException;
 use Optimal\FileManaging\FileCommander;
 use Optimal\FileManaging\ImagesManager;
 
-use Optimal\FileManaging\resources\AbstractImageFileResource;
-use Optimal\FileManaging\resources\BitmapImageFileResource;
+use Optimal\FileManaging\Resources\AbstractImageFileResource;
+use Optimal\FileManaging\Resources\BitmapImageFileResource;
 use Optimal\FileManaging\Utils\FilesTypes;
 use Optimal\FileManaging\Utils\ImageResolutionSettings;
 use Optimal\FileManaging\Utils\ImageResolutionsSettings;
