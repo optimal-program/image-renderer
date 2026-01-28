@@ -2,9 +2,11 @@
 
 namespace Optimal\ImageRenderer;
 
+use Exception;
 use Nette\Application\UI\Control;
 use Nette\Application\UI\TemplateFactory;
 use Optimal\FileManaging\FileCommander;
+use RuntimeException;
 
 class VectorImageRenderer extends Control
 {
@@ -22,12 +24,12 @@ class VectorImageRenderer extends Control
 
     /**
      * @param string $noImagePath
-     * @throws \Exception
+     * @throws Exception
      */
     public function setNoImagePath(string $noImagePath): void
     {
         if(FileCommander::isBitmapImage(pathinfo($noImagePath, PATHINFO_EXTENSION))){
-            throw new \Exception('No-image is not vector.');
+            throw new RuntimeException('No-image is not vector.');
         }
 
         $this->noImagePath = $noImagePath;
@@ -36,7 +38,7 @@ class VectorImageRenderer extends Control
     /**
      * @param string|null $imagePath
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     protected function checkImage(?string $imagePath):string
     {
@@ -44,7 +46,7 @@ class VectorImageRenderer extends Control
         if (!is_null($imagePath)) {
 
             if(FileCommander::isBitmapImage(pathinfo($imagePath, PATHINFO_EXTENSION))){
-                throw new \Exception('Image is not vector.');
+                throw new RuntimeException('Image is not vector.');
             }
 
             if(filter_var($imagePath, FILTER_VALIDATE_URL)) {
@@ -59,13 +61,13 @@ class VectorImageRenderer extends Control
         }
 
         if(is_null($this->noImagePath)){
-            throw new \Exception('No image is not set.');
+            throw new RuntimeException('No image is not set.');
         }
 
         return $this->noImagePath;
     }
 
-    protected function prepareClass(array $classes)
+    protected function prepareClass(array $classes): string
     {
         $template = $this->templateFactory->createTemplate();
         $template->classes = $classes;
@@ -77,7 +79,7 @@ class VectorImageRenderer extends Control
      * @param string|null $svgPath
      * @param string $alt
      * @param array $attributes
-     * @throws \Exception
+     * @throws Exception
      */
     public function render(?string $svgPath, string $alt, array $attributes = []):void
     {
@@ -110,7 +112,7 @@ class VectorImageRenderer extends Control
      * @param string $alt
      * @param array $attributes
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     public function renderAsString(?string $svgPath, string $alt, array $attributes = []):string
     {
@@ -121,7 +123,7 @@ class VectorImageRenderer extends Control
 
     /**
      * @param string|null $svgPath
-     * @throws \Exception
+     * @throws Exception
      */
     public function renderInline(?string $svgPath):void
     {
@@ -135,7 +137,7 @@ class VectorImageRenderer extends Control
     /**
      * @param string|null $svgPath
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     public function renderInlineAsString(?string $svgPath):string
     {

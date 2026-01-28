@@ -1,3 +1,5 @@
+{varType array $variants}
+
 {foreach $variants as $variant}
         {if $iterator->counter > 1},{/if}
         {$basePath}/{$variant->getFileRelativePath()}?time={filemtime($variant->getFileRelativePath())} {$variant->getWidth()}w

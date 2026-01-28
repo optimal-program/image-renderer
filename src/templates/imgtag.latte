@@ -2,14 +2,22 @@
 {var $srcSetAttr = ''}
 {var $srcAttr = ''}
 
+{varType string $sizesAttr}
+{varType string $srcSetAttr}
+{varType string $srcAttr}
+{varType string $class}
+{varType string $sizes}
+{varType array $attributes}
+{varType ?bool $lazyLoad}
+
 {if $lazyLoad}
-    {var $srcAttr = 'data-src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
+    {$srcAttr = 'data-src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
     {if !is_null($srcset) && !empty($sizes)}
         {var $srcSetAttr = 'data-srcset="'.$srcset.'"'}
         {var $sizesAttr = 'sizes="'.$sizes.'"'}
     {/if}
 {else}
-    {var $srcAttr = 'src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
+    {$srcAttr = 'src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
     {if !is_null($srcset) && !empty($sizes)}
         {var $srcSetAttr = 'srcset="'.$srcset.'"'}
         {var $sizesAttr = 'sizes="'.$sizes.'"'}
