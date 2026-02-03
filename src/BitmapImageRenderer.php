@@ -3,8 +3,8 @@
 namespace Optimal\ImageRenderer;
 
 use Exception;
-use ImagickException;
 use Nette\Application\UI;
+use Nette\Bridges\ApplicationLatte\TemplateFactory;
 use Nette\Caching\Cache;
 
 use Nette\Caching\Storages\FileStorage;
@@ -28,7 +28,7 @@ use Throwable;
 
 class BitmapImageRenderer extends UI\Control
 {
-    private UI\ITemplateFactory $templateFactory;
+    private TemplateFactory $templateFactory;
     private FileCommander $imageDirectoryCommander;
     private FileCommander $imageCacheDirCommander;
     private ImagesManager $imagesManager;
@@ -60,11 +60,8 @@ class BitmapImageRenderer extends UI\Control
 
     protected string $noImagePath;
 
-    /**
-     * BitmapImageRenderer constructor.
-     * @param UI\ITemplateFactory $templateFactory
-     */
-    public function __construct(UI\ITemplateFactory $templateFactory)
+
+    public function __construct(TemplateFactory $templateFactory)
     {
         $this->templateFactory = $templateFactory;
         $this->imageDirectoryCommander = new FileCommander();
@@ -72,10 +69,8 @@ class BitmapImageRenderer extends UI\Control
 
         $cacheDir = '../temp/cache/images';
 
-        if (!file_exists($cacheDir)) {
-            if (!mkdir($cacheDir) && !is_dir($cacheDir)) {
-                throw new RuntimeException(sprintf('Directory "%s" was not created', $cacheDir));
-            }
+        if (!file_exists($cacheDir) && !mkdir($cacheDir) && !is_dir($cacheDir)) {
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $cacheDir));
         }
 
         $storage = new FileStorage($cacheDir);
@@ -266,7 +261,6 @@ class BitmapImageRenderer extends UI\Control
      * @param int|null $height
      * @return AbstractImageFileResource
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws DirectoryNotFoundException
      * @throws FileException
      */
@@ -306,7 +300,6 @@ class BitmapImageRenderer extends UI\Control
      * @param string|null $strictExtension
      * @return BitmapImageFileResource|null
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DirectoryNotFoundException
      * @throws FileException
@@ -375,7 +368,6 @@ class BitmapImageRenderer extends UI\Control
      * @return array
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -436,7 +428,6 @@ class BitmapImageRenderer extends UI\Control
      * @throws DirectoryNotFoundException
      * @throws FileException
      * @throws FileNotFoundException
-     * @throws ImagickException
      */
     public function createImageVariants(string $imagePath, bool $fileIsChanged, ?string $strictExtension = null): array
     {
@@ -455,7 +446,6 @@ class BitmapImageRenderer extends UI\Control
      * @throws DirectoryNotFoundException
      * @throws FileException
      * @throws FileNotFoundException
-     * @throws ImagickException
      */
     public function createImageThumbVariants(string $imageThumbPath, bool $fileIsChanged, ?string $strictExtension = null): array
     {
@@ -585,7 +575,7 @@ class BitmapImageRenderer extends UI\Control
      */
     protected function isFileChanged($data, $fileHash, $lastTime): bool
     {
-        return !$data ? false : $data['lastHash'] != $fileHash || $data['lastModifiedTime'] != $lastTime;
+        return $data && ($data['lastHash'] !== $fileHash || $data['lastModifiedTime'] !== $lastTime);
     }
 
     /**
@@ -605,15 +595,10 @@ class BitmapImageRenderer extends UI\Control
      * @throws DirectoryNotFoundException
      * @throws FileException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws Throwable
      */
     protected function prepareImageWithMultipleVariants(string $imagePath, string $alt, ImageResolutionsSettings $resolutionsSettings, ?bool $lazyLoad = null, string $devicesSizes = "", array $attributes = [], bool $thumb = false, ?string $strictExtension = null): string
     {
-        if (!$this->imageCacheDirCommander) {
-            throw new RuntimeException('Images variants cache directory is not set');
-        }
-
         [$lazyLoad, $devicesSizes] = $this->checkDefaultParams($lazyLoad, $devicesSizes);
 
         $key = md5($this->isWebPSupported() . $imagePath . file_get_contents($imagePath) . $this->serializeResolutionSizes($resolutionsSettings) . $alt . $devicesSizes . $lazyLoad . implode(';', $attributes) . $strictExtension);
@@ -655,7 +640,6 @@ class BitmapImageRenderer extends UI\Control
      * @return array
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -729,7 +713,6 @@ class BitmapImageRenderer extends UI\Control
      * @return void
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -772,7 +755,6 @@ class BitmapImageRenderer extends UI\Control
      * @return void
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -792,7 +774,6 @@ class BitmapImageRenderer extends UI\Control
      * @return string
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -831,7 +812,6 @@ class BitmapImageRenderer extends UI\Control
      * @return void
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -859,7 +839,6 @@ class BitmapImageRenderer extends UI\Control
      * @return string
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -889,7 +868,6 @@ class BitmapImageRenderer extends UI\Control
      * @throws DirectoryNotFoundException
      * @throws FileException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws Throwable
      */
     public function renderImageThumbVariant(?string $imageThumbPath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes, ?string $strictExtension = null):void
@@ -912,16 +890,14 @@ class BitmapImageRenderer extends UI\Control
      * @param string $caption
      * @param bool|null $lazyLoad
      * @param array $attributes
-     * @param string|null $strictExtension
      * @return string
-     * @throws DirectoryException
-     * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
+     * @throws DirectoryException
      * @throws DirectoryNotFoundException
      * @throws FileException
+     * @throws FileNotFoundException
      * @throws Throwable
      */
     public function getImageThumbVariant(?string $imageThumbPath, ImageResolutionSettings $resolutionSettings, string $alt, string $caption, ?bool $lazyLoad, array $attributes):string
@@ -938,7 +914,6 @@ class BitmapImageRenderer extends UI\Control
      * @return string
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -959,7 +934,6 @@ class BitmapImageRenderer extends UI\Control
      * @return void
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -984,7 +958,6 @@ class BitmapImageRenderer extends UI\Control
      * @throws DirectoryNotFoundException
      * @throws FileException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws Throwable
      */
     public function getImageSrcSet(?string $imagePath, ?string $strictExtension = null): string
@@ -1022,10 +995,9 @@ class BitmapImageRenderer extends UI\Control
      * @throws DirectoryNotFoundException
      * @throws FileException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws Throwable
      */
-    public function renderImage(?string $imagePath, string $alt, ?bool $lazyLoad = null, string $sizes = "", string $caption = null, array $attributes = [], ?string $strictExtension = null): void
+    public function renderImage(?string $imagePath, string $alt, ?bool $lazyLoad = null, string $sizes = "", ?string $caption = null, array $attributes = [], ?string $strictExtension = null): void
     {
         $imagePath = $this->checkImage($imagePath);
 
@@ -1048,7 +1020,6 @@ class BitmapImageRenderer extends UI\Control
      * @return string
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -1074,7 +1045,6 @@ class BitmapImageRenderer extends UI\Control
      * @return void
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -1106,7 +1076,6 @@ class BitmapImageRenderer extends UI\Control
      * @return string
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
@@ -1128,7 +1097,6 @@ class BitmapImageRenderer extends UI\Control
      * @return string
      * @throws DirectoryException
      * @throws FileNotFoundException
-     * @throws ImagickException
      * @throws CreateDirectoryException
      * @throws DeleteDirectoryException
      * @throws DeleteFileException
