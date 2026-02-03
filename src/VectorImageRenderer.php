@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Optimal\ImageRenderer;
 
@@ -10,12 +10,8 @@ use RuntimeException;
 
 class VectorImageRenderer extends Control
 {
-
-    /** @var TemplateFactory */
-    private $templateFactory;
-
-    /** @var string */
-    protected $noImagePath;
+    private TemplateFactory $templateFactory;
+    protected string $noImagePath;
 
     public function __construct(TemplateFactory $templateFactory)
     {
