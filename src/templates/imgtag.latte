@@ -9,15 +9,17 @@
 {varType string $sizes}
 {varType array $attributes}
 {varType ?bool $lazyLoad}
+{varType string $alt}
+{varType string $src}
 
 {if $lazyLoad}
-    {$srcAttr = 'data-src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
+    {php $srcAttr = 'data-src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
     {if !is_null($srcset) && !empty($sizes)}
         {var $srcSetAttr = 'data-srcset="'.$srcset.'"'}
         {var $sizesAttr = 'sizes="'.$sizes.'"'}
     {/if}
 {else}
-    {$srcAttr = 'src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
+    {php $srcAttr = 'src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
     {if !is_null($srcset) && !empty($sizes)}
         {var $srcSetAttr = 'srcset="'.$srcset.'"'}
         {var $sizesAttr = 'sizes="'.$sizes.'"'}
