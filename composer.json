@@ -9,7 +9,7 @@
     "renderer"
   ],
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.4",
     "nette/application": "^3.0",
     "nette/caching": "^3.0",
     "optimal/file-managing": "^1.2.0",
