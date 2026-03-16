@@ -67,7 +67,7 @@ class BitmapImageRenderer extends UI\Control
         $this->imageDirectoryCommander = new FileCommander();
         $this->imagesManager = new ImagesManager();
 
-        $cacheDir = __DIR__ . '/../../../../temp/cache/images';
+        $cacheDir = dirname(__DIR__, 4) . '/temp/cache/images';
 
         if (!file_exists($cacheDir) && !mkdir($cacheDir) && !is_dir($cacheDir)) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $cacheDir));
