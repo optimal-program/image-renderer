@@ -58,7 +58,7 @@ class BitmapImageRenderer extends UI\Control
 
     protected int $createVariantsBottomLimit = 500;
 
-    protected string $noImagePath;
+    protected ?string $noImagePath = null;
 
 
     public function __construct(TemplateFactory $templateFactory)
@@ -178,13 +178,17 @@ class BitmapImageRenderer extends UI\Control
     protected function checkImage(?string $imagePath):string
     {
 
-        if (!is_null($imagePath) && file_exists($imagePath) && @getimagesize($imagePath)) {
+        if ($imagePath !== null && file_exists($imagePath) && @getimagesize($imagePath)) {
 
             if(!FileCommander::isBitmapImage(pathinfo($imagePath, PATHINFO_EXTENSION))){
                 throw new RuntimeException('Image is not bitmap.');
             }
 
             return $imagePath;
+        }
+
+        if ($this->noImagePath === null) {
+            throw new RuntimeException('No image is not set.');
         }
 
         return $this->noImagePath;
@@ -308,8 +312,8 @@ class BitmapImageRenderer extends UI\Control
     {
         $imageName = $image->getName();
 
-        $width = $resolutionSize->getWidth();
-        $height = $resolutionSize->getHeight();
+        $width = $resolutionSize->getWidth() ?? 0;
+        $height = $resolutionSize->getHeight() ?? 0;
 
         if ($width && $height) {
             if (($width > $image->getWidth()) && ($height > $image->getHeight())) {

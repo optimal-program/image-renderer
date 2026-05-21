@@ -12,14 +12,16 @@
 {varType string $alt}
 {varType string $src}
 
+{var $srcMtime = is_file($src) ? filemtime($src) : ''}
+
 {if $lazyLoad}
-    {php $srcAttr = 'data-src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
+    {php $srcAttr = 'data-src="' . $basePath . '/' .$src . '?time='.$srcMtime.'"'}
     {if !is_null($srcset) && !empty($sizes)}
         {var $srcSetAttr = 'data-srcset="'.$srcset.'"'}
         {var $sizesAttr = 'sizes="'.$sizes.'"'}
     {/if}
 {else}
-    {php $srcAttr = 'src="' . $basePath . '/' .$src . '?time='.filemtime($src).'"'}
+    {php $srcAttr = 'src="' . $basePath . '/' .$src . '?time='.$srcMtime.'"'}
     {if !is_null($srcset) && !empty($sizes)}
         {var $srcSetAttr = 'srcset="'.$srcset.'"'}
         {var $sizesAttr = 'sizes="'.$sizes.'"'}

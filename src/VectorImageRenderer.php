@@ -11,7 +11,7 @@ use RuntimeException;
 class VectorImageRenderer extends Control
 {
     private TemplateFactory $templateFactory;
-    protected string $noImagePath;
+    protected ?string $noImagePath = null;
 
     public function __construct(TemplateFactory $templateFactory)
     {
@@ -46,8 +46,8 @@ class VectorImageRenderer extends Control
             }
 
             if(filter_var($imagePath, FILTER_VALIDATE_URL)) {
-                $headers=get_headers($imagePath);
-                if(stripos($headers[0],"200 OK")) {
+                $headers = @get_headers($imagePath);
+                if (is_array($headers) && isset($headers[0]) && stripos($headers[0], "200 OK") !== false) {
                     return $imagePath;
                 }
             } elseif (file_exists($imagePath)) {
@@ -56,7 +56,7 @@ class VectorImageRenderer extends Control
 
         }
 
-        if(is_null($this->noImagePath)){
+        if ($this->noImagePath === null) {
             throw new RuntimeException('No image is not set.');
         }
 
@@ -68,7 +68,7 @@ class VectorImageRenderer extends Control
         $template = $this->templateFactory->createTemplate();
         $template->classes = $classes;
         $template->setFile(__DIR__ . '/templates/class.latte');
-        return trim(preg_replace('/\s\s+/', ' ', $template));
+        return trim(preg_replace('/\s\s+/', ' ', (string) $template));
     }
 
     /**
@@ -110,11 +110,11 @@ class VectorImageRenderer extends Control
      * @return string
      * @throws Exception
      */
-    public function renderAsString(?string $svgPath, string $alt, array $attributes = []):string
+    public function renderAsString(?string $svgPath, string $alt, array $attributes = []): string
     {
         ob_start();
         $this->render($svgPath, $alt, $attributes);
-        return ob_end_flush();
+        return (string) ob_get_clean();
     }
 
     /**
@@ -125,8 +125,17 @@ class VectorImageRenderer extends Control
     {
         $svgPath = $this->checkImage($svgPath);
 
+        $svgContent = file_get_contents($svgPath);
+        if ($svgContent === false) {
+            throw new RuntimeException(sprintf('Unable to read SVG file "%s".', $svgPath));
+        }
+
         $this->template->setFile(__DIR__ . '/templates/inlineSvg.latte');
-        $this->template->svgContent = mb_convert_encoding(file_get_contents($svgPath), 'HTML-ENTITIES', "UTF-8");
+        $this->template->svgContent = mb_encode_numericentity(
+            $svgContent,
+            [0x80, 0x10FFFF, 0, 0x1FFFFF],
+            'UTF-8'
+        );
         $this->template->render();
     }
 
@@ -135,11 +144,11 @@ class VectorImageRenderer extends Control
      * @return string
      * @throws Exception
      */
-    public function renderInlineAsString(?string $svgPath):string
+    public function renderInlineAsString(?string $svgPath): string
     {
         ob_start();
         $this->renderInline($svgPath);
-        return ob_end_flush();
+        return (string) ob_get_clean();
     }
 
 }
